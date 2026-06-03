@@ -29,5 +29,9 @@
     "pino": "^9.6.0",
     "undici": "^7.2.0",
     "wa-store-migrate": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.1"
   }
 }

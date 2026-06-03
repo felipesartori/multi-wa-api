@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { createSessionInputSchema, messageContentSchema, sendMessageInputSchema } from './index'
+import {
+  createApiKeyInputSchema,
+  createSessionInputSchema,
+  createWebhookInputSchema,
+  engineEventSchema,
+  loginInputSchema,
+  messageContentSchema,
+  migrateSessionInputSchema,
+  sendMessageInputSchema
+} from './index'
 
-describe('schemas', () => {
+describe('message schemas', () => {
   it('accepts a text content', () => {
     expect(messageContentSchema.safeParse({ kind: 'text', text: 'hi' }).success).toBe(true)
   })
@@ -17,16 +26,74 @@ describe('schemas', () => {
     ).toBe(true)
   })
 
-  it('validates the session engine enum', () => {
+  it('accepts base64 media', () => {
+    expect(
+      messageContentSchema.safeParse({ kind: 'image', media: { base64: 'aGk=' } }).success
+    ).toBe(true)
+  })
+
+  it('validates location numbers', () => {
+    expect(
+      messageContentSchema.safeParse({ kind: 'location', latitude: 1, longitude: 2 }).success
+    ).toBe(true)
+    expect(
+      messageContentSchema.safeParse({ kind: 'location', latitude: 'x', longitude: 2 }).success
+    ).toBe(false)
+  })
+
+  it('validates a full send message input', () => {
+    expect(
+      sendMessageInputSchema.safeParse({
+        to: '5511999999999',
+        content: { kind: 'text', text: 'hello' }
+      }).success
+    ).toBe(true)
+  })
+})
+
+describe('session schemas', () => {
+  it('validates the engine enum', () => {
     expect(createSessionInputSchema.safeParse({ name: 'a', engine: 'zapo' }).success).toBe(true)
     expect(createSessionInputSchema.safeParse({ name: 'a', engine: 'nope' }).success).toBe(false)
   })
 
-  it('validates a full send message input', () => {
-    const result = sendMessageInputSchema.safeParse({
-      to: '5511999999999',
-      content: { kind: 'text', text: 'hello' }
-    })
-    expect(result.success).toBe(true)
+  it('validates migration target', () => {
+    expect(migrateSessionInputSchema.safeParse({ to: 'baileys' }).success).toBe(true)
+    expect(migrateSessionInputSchema.safeParse({ to: 'sms' }).success).toBe(false)
+  })
+})
+
+describe('auth and webhook schemas', () => {
+  it('validates login input', () => {
+    expect(loginInputSchema.safeParse({ email: 'a@b.com', password: 'x' }).success).toBe(true)
+    expect(loginInputSchema.safeParse({ email: 'not-an-email', password: 'x' }).success).toBe(false)
+  })
+
+  it('validates api key name', () => {
+    expect(createApiKeyInputSchema.safeParse({ name: 'ci' }).success).toBe(true)
+    expect(createApiKeyInputSchema.safeParse({ name: '' }).success).toBe(false)
+  })
+
+  it('requires a url and at least one event for webhooks', () => {
+    expect(
+      createWebhookInputSchema.safeParse({ url: 'https://x/hook', events: ['message'] }).success
+    ).toBe(true)
+    expect(createWebhookInputSchema.safeParse({ url: 'x', events: ['message'] }).success).toBe(
+      false
+    )
+    expect(createWebhookInputSchema.safeParse({ url: 'https://x/hook', events: [] }).success).toBe(
+      false
+    )
+  })
+})
+
+describe('engine event schema', () => {
+  it('parses qr, status and message events', () => {
+    expect(engineEventSchema.safeParse({ type: 'qr', qr: 'abc' }).success).toBe(true)
+    expect(engineEventSchema.safeParse({ type: 'status', status: 'connected' }).success).toBe(true)
+    expect(
+      engineEventSchema.safeParse({ type: 'message', chat: 'c', from: 'f', fromMe: false }).success
+    ).toBe(true)
+    expect(engineEventSchema.safeParse({ type: 'status', status: 'bogus' }).success).toBe(false)
   })
 })

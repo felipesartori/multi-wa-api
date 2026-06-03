@@ -26,5 +26,8 @@
     "@multi-wa/db": "workspace:*",
     "@multi-wa/types": "workspace:*",
     "baileys": "7.0.0-rc13"
+  },
+  "devDependencies": {
+    "wa-store-migrate": "^0.1.0"
   }
 }

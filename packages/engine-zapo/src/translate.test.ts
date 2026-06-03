@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { toZapoContent } from './translate'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('toZapoContent', () => {
   it('maps text', async () => {
@@ -15,6 +19,24 @@ describe('toZapoContent', () => {
     expect(result.type).toBe('image')
     expect(result.mimetype).toBe('image/jpeg')
     expect(result.media).toBeInstanceOf(Uint8Array)
+  })
+
+  it('fetches media by url', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        arrayBuffer: async () => new TextEncoder().encode('bytes').buffer
+      }))
+    )
+    const result = (await toZapoContent({
+      kind: 'document',
+      media: { url: 'https://x/y.pdf' },
+      filename: 'y.pdf'
+    })) as { type: string; media: Uint8Array; fileName?: string }
+    expect(result.type).toBe('document')
+    expect(result.media).toBeInstanceOf(Uint8Array)
+    expect(result.fileName).toBe('y.pdf')
   })
 
   it('maps location to a proto message', async () => {

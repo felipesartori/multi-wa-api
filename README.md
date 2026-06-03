@@ -78,6 +78,24 @@ segurança alterado", pois a chave de identidade é preservada).
 pnpm build       # turbo: build de todos os pacotes (tsup)
 pnpm typecheck   # tsc --noEmit
 pnpm lint        # eslint
-pnpm test        # vitest
+pnpm test        # vitest (unidade + integração)
 pnpm db:migrate  # aplica migrations
 ```
+
+### Testes
+
+A suíte cobre: schemas (zod), crypto, tradução de mensagens nas duas engines,
+`SessionManager`/`SessionService`/`MessagingService`/`MigrationService`,
+dispatcher de webhooks (HMAC, servidor HTTP real), `AuthService`, o SDK (servidor
+HTTP real + parsing de SSE), as rotas da API (`fastify.inject`) e um round-trip
+real de migração `baileys ↔ zapo` via `wa-store-migrate`.
+
+Testes de integração com Postgres (repositórios + auth contra um banco real) rodam
+quando `TEST_DATABASE_URL` está definido — caso contrário são pulados:
+
+```bash
+TEST_DATABASE_URL=postgres://user:pass@localhost:5432/multi_wa_test \
+  pnpm --filter @multi-wa/core test
+```
+
+O schema é migrado automaticamente no banco de teste.
