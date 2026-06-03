@@ -7,12 +7,12 @@ afterEach(() => {
 
 describe('toZapoContent', () => {
   it('maps text', async () => {
-    expect(await toZapoContent({ kind: 'text', text: 'hi' })).toEqual({ type: 'text', text: 'hi' })
+    expect(await toZapoContent({ type: 'text', text: 'hi' })).toEqual({ type: 'text', text: 'hi' })
   })
 
   it('maps image by base64 to bytes with mimetype', async () => {
     const result = (await toZapoContent({
-      kind: 'image',
+      type: 'image',
       media: { base64: Buffer.from('hi').toString('base64') },
       caption: 'c'
     })) as { type: string; media: Uint8Array; mimetype: string }
@@ -30,7 +30,7 @@ describe('toZapoContent', () => {
       }))
     )
     const result = (await toZapoContent({
-      kind: 'document',
+      type: 'document',
       media: { url: 'https://x/y.pdf' },
       filename: 'y.pdf'
     })) as { type: string; media: Uint8Array; fileName?: string }
@@ -40,7 +40,7 @@ describe('toZapoContent', () => {
   })
 
   it('maps location to a proto message', async () => {
-    const result = (await toZapoContent({ kind: 'location', latitude: 1, longitude: 2 })) as {
+    const result = (await toZapoContent({ type: 'location', latitude: 1, longitude: 2 })) as {
       locationMessage: { degreesLatitude: number; degreesLongitude: number }
     }
     expect(result.locationMessage.degreesLatitude).toBe(1)

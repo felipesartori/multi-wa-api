@@ -52,6 +52,14 @@ Variáveis principais (ver `.env.example`): `DATABASE_URL`, `JWT_SECRET` (>=32 c
 Autenticação: header `x-api-key: <prefix>.<secret>` (server-to-server) ou
 `Authorization: Bearer <jwt>` (usuário/painel).
 
+### Documentação (Swagger / OpenAPI)
+
+- **Swagger UI**: `GET /docs`
+- **OpenAPI 3 JSON**: `GET /docs/json`
+
+A spec é gerada a partir dos mesmos schemas zod (request, params, respostas de
+sucesso e de erro, security por rota), então fica sempre em sincronia com a API.
+
 ## SDK
 
 ```ts

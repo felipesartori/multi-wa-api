@@ -18,7 +18,7 @@ function buildVcard(fullName: string, phone: string): string {
 }
 
 export function toBaileysContent(content: MessageContent): AnyMessageContent {
-  switch (content.kind) {
+  switch (content.type) {
     case 'text':
       return { text: content.text }
     case 'image':

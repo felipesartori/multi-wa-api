@@ -61,7 +61,7 @@ describe('sdk client', () => {
     expect(lastRequest?.headers['x-api-key']).toBe('prefix.secret')
     expect(JSON.parse(lastRequest!.body)).toEqual({
       to: '5511999999999',
-      content: { kind: 'text', text: 'hello' }
+      content: { type: 'text', text: 'hello' }
     })
   })
 
@@ -71,7 +71,7 @@ describe('sdk client', () => {
     expect(lastRequest?.headers.authorization).toBe('Bearer jwt-token')
     expect(JSON.parse(lastRequest!.body)).toEqual({
       to: '551199',
-      content: { kind: 'image', media: { url: 'https://x/y.jpg' }, caption: 'cap' }
+      content: { type: 'image', media: { url: 'https://x/y.jpg' }, caption: 'cap' }
     })
   })
 

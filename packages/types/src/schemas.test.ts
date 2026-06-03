@@ -12,32 +12,32 @@ import {
 
 describe('message schemas', () => {
   it('accepts a text content', () => {
-    expect(messageContentSchema.safeParse({ kind: 'text', text: 'hi' }).success).toBe(true)
+    expect(messageContentSchema.safeParse({ type: 'text', text: 'hi' }).success).toBe(true)
   })
 
   it('rejects an unknown content kind', () => {
-    expect(messageContentSchema.safeParse({ kind: 'unknown' }).success).toBe(false)
+    expect(messageContentSchema.safeParse({ type: 'unknown' }).success).toBe(false)
   })
 
   it('requires media for image content', () => {
-    expect(messageContentSchema.safeParse({ kind: 'image' }).success).toBe(false)
+    expect(messageContentSchema.safeParse({ type: 'image' }).success).toBe(false)
     expect(
-      messageContentSchema.safeParse({ kind: 'image', media: { url: 'https://x/y.jpg' } }).success
+      messageContentSchema.safeParse({ type: 'image', media: { url: 'https://x/y.jpg' } }).success
     ).toBe(true)
   })
 
   it('accepts base64 media', () => {
     expect(
-      messageContentSchema.safeParse({ kind: 'image', media: { base64: 'aGk=' } }).success
+      messageContentSchema.safeParse({ type: 'image', media: { base64: 'aGk=' } }).success
     ).toBe(true)
   })
 
   it('validates location numbers', () => {
     expect(
-      messageContentSchema.safeParse({ kind: 'location', latitude: 1, longitude: 2 }).success
+      messageContentSchema.safeParse({ type: 'location', latitude: 1, longitude: 2 }).success
     ).toBe(true)
     expect(
-      messageContentSchema.safeParse({ kind: 'location', latitude: 'x', longitude: 2 }).success
+      messageContentSchema.safeParse({ type: 'location', latitude: 'x', longitude: 2 }).success
     ).toBe(false)
   })
 
@@ -45,7 +45,7 @@ describe('message schemas', () => {
     expect(
       sendMessageInputSchema.safeParse({
         to: '5511999999999',
-        content: { kind: 'text', text: 'hello' }
+        content: { type: 'text', text: 'hello' }
       }).success
     ).toBe(true)
   })

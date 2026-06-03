@@ -124,13 +124,13 @@ export function createClient(options: ClientOptions) {
       sendContent: (sessionId: string, to: string, content: MessageContent) =>
         send(sessionId, { to, content }),
       sendText: (sessionId: string, to: string, text: string) =>
-        send(sessionId, { to, content: { kind: 'text', text } }),
+        send(sessionId, { to, content: { type: 'text', text } }),
       sendImage: (sessionId: string, to: string, media: MediaInput, caption?: string) =>
-        send(sessionId, { to, content: { kind: 'image', media: toMedia(media), caption } }),
+        send(sessionId, { to, content: { type: 'image', media: toMedia(media), caption } }),
       sendVideo: (sessionId: string, to: string, media: MediaInput, caption?: string) =>
-        send(sessionId, { to, content: { kind: 'video', media: toMedia(media), caption } }),
+        send(sessionId, { to, content: { type: 'video', media: toMedia(media), caption } }),
       sendAudio: (sessionId: string, to: string, media: MediaInput, voice?: boolean) =>
-        send(sessionId, { to, content: { kind: 'audio', media: toMedia(media), voice } }),
+        send(sessionId, { to, content: { type: 'audio', media: toMedia(media), voice } }),
       sendDocument: (
         sessionId: string,
         to: string,
@@ -140,10 +140,10 @@ export function createClient(options: ClientOptions) {
       ) =>
         send(sessionId, {
           to,
-          content: { kind: 'document', media: toMedia(media), filename, mimetype }
+          content: { type: 'document', media: toMedia(media), filename, mimetype }
         }),
       sendSticker: (sessionId: string, to: string, media: MediaInput) =>
-        send(sessionId, { to, content: { kind: 'sticker', media: toMedia(media) } }),
+        send(sessionId, { to, content: { type: 'sticker', media: toMedia(media) } }),
       sendLocation: (
         sessionId: string,
         to: string,
@@ -154,10 +154,10 @@ export function createClient(options: ClientOptions) {
       ) =>
         send(sessionId, {
           to,
-          content: { kind: 'location', latitude, longitude, name, address }
+          content: { type: 'location', latitude, longitude, name, address }
         }),
       sendContact: (sessionId: string, to: string, fullName: string, phone: string) =>
-        send(sessionId, { to, content: { kind: 'contact', fullName, phone } })
+        send(sessionId, { to, content: { type: 'contact', fullName, phone } })
     },
     webhooks: {
       create: (input: CreateWebhookInput): Promise<WebhookCreated> =>

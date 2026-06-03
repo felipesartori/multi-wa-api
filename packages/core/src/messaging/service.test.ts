@@ -19,13 +19,13 @@ describe('MessagingService', () => {
 
     const result = await service.send('s1', {
       to: '5511999999999',
-      content: { kind: 'text', text: 'hi' }
+      content: { type: 'text', text: 'hi' }
     })
 
     expect(result).toEqual({ id: 'sent-1' })
     expect(captured).toEqual({
       to: '5511999999999',
-      content: { kind: 'text', text: 'hi' }
+      content: { type: 'text', text: 'hi' }
     })
   })
 
@@ -33,7 +33,7 @@ describe('MessagingService', () => {
     const manager = { getEngine: () => null } as unknown as SessionManager
     const service = new MessagingService(manager)
     await expect(
-      service.send('s1', { to: 'x', content: { kind: 'text', text: 'hi' } })
+      service.send('s1', { to: 'x', content: { type: 'text', text: 'hi' } })
     ).rejects.toBeInstanceOf(AppError)
   })
 })

@@ -17,7 +17,7 @@ const DEFAULT_MIME: Record<string, string> = {
 }
 
 export async function toZapoContent(content: MessageContent): Promise<WaSendMessageContent> {
-  switch (content.kind) {
+  switch (content.type) {
     case 'text':
       return { type: 'text', text: content.text }
     case 'image':

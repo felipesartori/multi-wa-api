@@ -9,30 +9,30 @@ export type MediaSource = z.infer<typeof mediaSourceSchema>
 const recipient = z.string().min(1).max(128)
 
 export const textContentSchema = z.object({
-  kind: z.literal('text'),
+  type: z.literal('text'),
   text: z.string().min(1)
 })
 
 export const imageContentSchema = z.object({
-  kind: z.literal('image'),
+  type: z.literal('image'),
   media: mediaSourceSchema,
   caption: z.string().optional()
 })
 
 export const videoContentSchema = z.object({
-  kind: z.literal('video'),
+  type: z.literal('video'),
   media: mediaSourceSchema,
   caption: z.string().optional()
 })
 
 export const audioContentSchema = z.object({
-  kind: z.literal('audio'),
+  type: z.literal('audio'),
   media: mediaSourceSchema,
   voice: z.boolean().optional()
 })
 
 export const documentContentSchema = z.object({
-  kind: z.literal('document'),
+  type: z.literal('document'),
   media: mediaSourceSchema,
   filename: z.string().optional(),
   mimetype: z.string().optional(),
@@ -40,12 +40,12 @@ export const documentContentSchema = z.object({
 })
 
 export const stickerContentSchema = z.object({
-  kind: z.literal('sticker'),
+  type: z.literal('sticker'),
   media: mediaSourceSchema
 })
 
 export const locationContentSchema = z.object({
-  kind: z.literal('location'),
+  type: z.literal('location'),
   latitude: z.number(),
   longitude: z.number(),
   name: z.string().optional(),
@@ -53,12 +53,12 @@ export const locationContentSchema = z.object({
 })
 
 export const contactContentSchema = z.object({
-  kind: z.literal('contact'),
+  type: z.literal('contact'),
   fullName: z.string().min(1),
   phone: z.string().min(1)
 })
 
-export const messageContentSchema = z.discriminatedUnion('kind', [
+export const messageContentSchema = z.discriminatedUnion('type', [
   textContentSchema,
   imageContentSchema,
   videoContentSchema,
