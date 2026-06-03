@@ -6,7 +6,8 @@ async function main(): Promise<void> {
   const container = createContainer()
   await runMigrations(container.pool)
 
-  const { BOOTSTRAP_ADMIN_EMAIL, BOOTSTRAP_ADMIN_PASSWORD, BOOTSTRAP_TENANT_NAME } = container.config
+  const { BOOTSTRAP_ADMIN_EMAIL, BOOTSTRAP_ADMIN_PASSWORD, BOOTSTRAP_TENANT_NAME } =
+    container.config
   if (BOOTSTRAP_ADMIN_EMAIL && BOOTSTRAP_ADMIN_PASSWORD) {
     await container.authService.ensureBootstrapUser(
       BOOTSTRAP_TENANT_NAME,

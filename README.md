@@ -16,16 +16,16 @@ Uma sessão pode **migrar de engine sem re-parear** via
 
 ## Pacotes
 
-| Pacote | Papel |
-| --- | --- |
-| `@multi-wa/types` | Schemas zod + tipos compartilhados (fonte única de verdade) |
-| `@multi-wa/config` | Validação de ambiente |
-| `@multi-wa/db` | Pool pg, runner de migrations, schema |
-| `@multi-wa/core` | Domínio engine-agnóstico: sessões, mensagens, migração, webhooks, auth |
-| `@multi-wa/engine-baileys` | Engine baileys + auth-state em Postgres |
-| `@multi-wa/engine-zapo` | Engine zapo + store Postgres |
-| `@multi-wa/sdk` | Cliente HTTP tipado (zero-payload) |
-| `@multi-wa/api` | Servidor Fastify (runnable) |
+| Pacote                     | Papel                                                                  |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `@multi-wa/types`          | Schemas zod + tipos compartilhados (fonte única de verdade)            |
+| `@multi-wa/config`         | Validação de ambiente                                                  |
+| `@multi-wa/db`             | Pool pg, runner de migrations, schema                                  |
+| `@multi-wa/core`           | Domínio engine-agnóstico: sessões, mensagens, migração, webhooks, auth |
+| `@multi-wa/engine-baileys` | Engine baileys + auth-state em Postgres                                |
+| `@multi-wa/engine-zapo`    | Engine zapo + store Postgres                                           |
+| `@multi-wa/sdk`            | Cliente HTTP tipado (zero-payload)                                     |
+| `@multi-wa/api`            | Servidor Fastify (runnable)                                            |
 
 ## Setup
 

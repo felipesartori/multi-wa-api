@@ -18,7 +18,11 @@
     "format:check": "prettier --check ."
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["argon2", "esbuild", "protobufjs"]
+    "onlyBuiltDependencies": [
+      "argon2",
+      "esbuild",
+      "protobufjs"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

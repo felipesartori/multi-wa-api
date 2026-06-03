@@ -48,7 +48,9 @@ export function toBaileysContent(content: MessageContent): AnyMessageContent {
     case 'contact':
       return {
         contacts: {
-          contacts: [{ displayName: content.fullName, vcard: buildVcard(content.fullName, content.phone) }]
+          contacts: [
+            { displayName: content.fullName, vcard: buildVcard(content.fullName, content.phone) }
+          ]
         }
       }
   }

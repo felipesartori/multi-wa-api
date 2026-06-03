@@ -8,7 +8,12 @@ import type { FastifyInstance } from 'fastify'
 import type { Container } from '../../container'
 import { parse } from '../validation'
 
-function signAccess(app: FastifyInstance, container: Container, userId: string, tenantId: string): string {
+function signAccess(
+  app: FastifyInstance,
+  container: Container,
+  userId: string,
+  tenantId: string
+): string {
   return app.jwt.sign({ sub: userId, tenantId }, { expiresIn: container.config.JWT_ACCESS_TTL })
 }
 

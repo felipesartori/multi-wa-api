@@ -43,11 +43,7 @@ export class WebhookDispatcher {
     return targets
   }
 
-  private async deliverAll(
-    tenantId: string,
-    sessionId: string,
-    event: EngineEvent
-  ): Promise<void> {
+  private async deliverAll(tenantId: string, sessionId: string, event: EngineEvent): Promise<void> {
     let targets: WebhookTarget[]
     try {
       targets = await this.resolveTargets(tenantId)
@@ -56,9 +52,7 @@ export class WebhookDispatcher {
       return
     }
     const subscribed = targets.filter((target) => target.events.includes(event.type))
-    await Promise.all(
-      subscribed.map((target) => this.deliver(target, sessionId, event))
-    )
+    await Promise.all(subscribed.map((target) => this.deliver(target, sessionId, event)))
   }
 
   private async deliver(

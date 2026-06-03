@@ -115,10 +115,7 @@ export interface BaileysSnapshot {
   keys: Record<string, Record<string, unknown>>
 }
 
-export async function readBaileysSnapshot(
-  pool: Pool,
-  sessionId: string
-): Promise<BaileysSnapshot> {
+export async function readBaileysSnapshot(pool: Pool, sessionId: string): Promise<BaileysSnapshot> {
   const creds = await loadCreds(pool, sessionId)
   if (!creds) throw new Error('no baileys credentials to migrate')
   const { rows } = await pool.query<{ category: string; item_id: string; value: unknown }>(

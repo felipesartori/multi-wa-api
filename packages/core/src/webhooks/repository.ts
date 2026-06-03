@@ -30,11 +30,7 @@ function toWebhook(row: WebhookRow): Webhook {
 export class WebhookRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(
-    tenantId: string,
-    input: CreateWebhookInput,
-    secret: string
-  ): Promise<Webhook> {
+  async create(tenantId: string, input: CreateWebhookInput, secret: string): Promise<Webhook> {
     const { rows } = await this.pool.query<WebhookRow>(
       `INSERT INTO webhooks (tenant_id, url, secret, events)
        VALUES ($1, $2, $3, $4)
@@ -67,10 +63,10 @@ export class WebhookRepository {
   }
 
   async delete(tenantId: string, id: string): Promise<boolean> {
-    const result = await this.pool.query(
-      `DELETE FROM webhooks WHERE tenant_id = $1 AND id = $2`,
-      [tenantId, id]
-    )
+    const result = await this.pool.query(`DELETE FROM webhooks WHERE tenant_id = $1 AND id = $2`, [
+      tenantId,
+      id
+    ])
     return (result.rowCount ?? 0) > 0
   }
 }

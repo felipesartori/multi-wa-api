@@ -20,9 +20,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(3000),
-  LOG_LEVEL: z
-    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
-    .default('info'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),

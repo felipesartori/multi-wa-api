@@ -1,11 +1,7 @@
 import type { ApiKey, ApiKeyCreated } from '@multi-wa/types'
 import { constantTimeEqual, hashPassword, randomToken, sha256, verifyPassword } from '../lib/crypto'
 import { errors } from '../lib/errors'
-import type {
-  ApiKeyRepository,
-  RefreshTokenRepository,
-  UserRepository
-} from './repository'
+import type { ApiKeyRepository, RefreshTokenRepository, UserRepository } from './repository'
 
 export interface Principal {
   userId: string
@@ -88,11 +84,7 @@ export class AuthService {
     if (record && !record.revoked) await this.refreshTokens.revoke(record.id)
   }
 
-  async ensureBootstrapUser(
-    tenantName: string,
-    email: string,
-    password: string
-  ): Promise<void> {
+  async ensureBootstrapUser(tenantName: string, email: string, password: string): Promise<void> {
     const existing = await this.users.findByEmail(email)
     if (existing) return
     await this.users.createTenantWithUser(tenantName, email, await hashPassword(password))

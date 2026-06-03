@@ -1,10 +1,5 @@
 import type { Pool } from '@multi-wa/db'
-import type {
-  EngineEvent,
-  EngineKind,
-  MessageContent,
-  SendMessageResult
-} from '@multi-wa/types'
+import type { EngineEvent, EngineKind, MessageContent, SendMessageResult } from '@multi-wa/types'
 import type { Logger } from '../lib/logger'
 
 export interface EngineOptions {

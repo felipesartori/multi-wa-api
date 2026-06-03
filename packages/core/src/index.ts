@@ -36,11 +36,7 @@ export { WebhookDispatcher } from './webhooks/dispatcher'
 export type { WebhookDispatcherOptions } from './webhooks/dispatcher'
 export { WebhookService } from './webhooks/service'
 
-export {
-  UserRepository,
-  ApiKeyRepository,
-  RefreshTokenRepository
-} from './auth/repository'
+export { UserRepository, ApiKeyRepository, RefreshTokenRepository } from './auth/repository'
 export type { UserRecord, ApiKeyRecord, RefreshTokenRecord } from './auth/repository'
 export { AuthService } from './auth/service'
 export type { Principal, RefreshRotation } from './auth/service'

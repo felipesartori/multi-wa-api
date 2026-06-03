@@ -73,17 +73,17 @@ export class SessionRepository {
   }
 
   async updateEngine(id: string, engine: EngineKind): Promise<void> {
-    await this.pool.query(
-      `UPDATE sessions SET engine = $2, updated_at = now() WHERE id = $1`,
-      [id, engine]
-    )
+    await this.pool.query(`UPDATE sessions SET engine = $2, updated_at = now() WHERE id = $1`, [
+      id,
+      engine
+    ])
   }
 
   async delete(tenantId: string, id: string): Promise<boolean> {
-    const result = await this.pool.query(
-      `DELETE FROM sessions WHERE tenant_id = $1 AND id = $2`,
-      [tenantId, id]
-    )
+    const result = await this.pool.query(`DELETE FROM sessions WHERE tenant_id = $1 AND id = $2`, [
+      tenantId,
+      id
+    ])
     return (result.rowCount ?? 0) > 0
   }
 }

@@ -93,12 +93,7 @@ function toApiKey(row: ApiKeyRow): ApiKey {
 export class ApiKeyRepository {
   constructor(private readonly pool: Pool) {}
 
-  async create(
-    tenantId: string,
-    name: string,
-    prefix: string,
-    keyHash: string
-  ): Promise<ApiKey> {
+  async create(tenantId: string, name: string, prefix: string, keyHash: string): Promise<ApiKey> {
     const { rows } = await this.pool.query<ApiKeyRow>(
       `INSERT INTO api_keys (tenant_id, name, prefix, key_hash)
        VALUES ($1, $2, $3, $4)

@@ -14,7 +14,10 @@ interface ZapoWriteSnapshot {
   senderKeys?: { record: unknown }[]
   appState?: {
     keys: unknown[]
-    collections: Record<string, { version: number; hash: Uint8Array; indexValueMap: Record<string, Uint8Array> }>
+    collections: Record<
+      string,
+      { version: number; hash: Uint8Array; indexValueMap: Record<string, Uint8Array> }
+    >
   }
   privacyTokens?: unknown[]
   deviceLists?: unknown[]
@@ -42,7 +45,10 @@ export async function writeZapoSnapshot(options: EngineOptions, data: unknown): 
 
   if (snapshot.identities?.length) {
     await session.identity.setRemoteIdentities(
-      snapshot.identities.map((item) => ({ address: item.address, identityKey: item.identityKey })) as never
+      snapshot.identities.map((item) => ({
+        address: item.address,
+        identityKey: item.identityKey
+      })) as never
     )
   }
 

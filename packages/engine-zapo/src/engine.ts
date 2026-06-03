@@ -119,7 +119,12 @@ export class ZapoEngine implements WaEngine {
   }
 }
 
-function extractText(message: { conversation?: string | null; extendedTextMessage?: { text?: string | null } | null } | null | undefined): string | undefined {
+function extractText(
+  message:
+    | { conversation?: string | null; extendedTextMessage?: { text?: string | null } | null }
+    | null
+    | undefined
+): string | undefined {
   if (!message) return undefined
   return message.conversation ?? message.extendedTextMessage?.text ?? undefined
 }
