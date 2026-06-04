@@ -260,6 +260,24 @@ describe('mapZapoMessageEvent', () => {
     expect(lidGroup.from).toBe('199@lid')
     expect(lidGroup.fromAlt).toBe('55@s.whatsapp.net')
 
+    const lidDirect = mapZapoMessageEvent(
+      base({
+        key: {
+          remoteJid: '199@lid',
+          id: 'M5',
+          fromMe: false,
+          remoteJidAlt: '55@s.whatsapp.net',
+          isGroup: false,
+          isBroadcast: false,
+          isNewsletter: false,
+          senderDevice: 0
+        },
+        message: { conversation: 'oi' }
+      })
+    )
+    expect(lidDirect.from).toBe('199@lid')
+    expect(lidDirect.fromAlt).toBe('55@s.whatsapp.net')
+
     const plain = mapZapoMessageEvent(base({ message: { conversation: 'oi' } }))
     expect(plain.fromAlt).toBeUndefined()
   })

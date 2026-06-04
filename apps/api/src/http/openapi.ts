@@ -316,7 +316,7 @@ const WEBHOOK_DELIVERY_EXAMPLES: Record<string, OpenAPIV3.ExampleObject> = {
       type: 'message',
       id: '3EB0...',
       chat: '120363000000000000@g.us',
-      from: '5511888888888@s.whatsapp.net',
+      from: '199999999999999@lid',
       fromMe: false,
       isGroup: true,
       participant: '199999999999999@lid',
