@@ -44,7 +44,9 @@ export class SessionManager {
       sessionId,
       pool: this.deps.pool,
       tablePrefix: this.deps.tablePrefix,
-      logger: this.deps.logger.child(engine ? { engine, session: sessionId } : { session: sessionId })
+      logger: this.deps.logger.child(
+        engine ? { engine, session: sessionId } : { session: sessionId }
+      )
     }
   }
 
