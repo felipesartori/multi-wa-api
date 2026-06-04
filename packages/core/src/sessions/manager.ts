@@ -6,10 +6,13 @@ import type { SessionRepository } from './repository'
 
 export type EngineEventListener = (event: EngineEvent) => void
 
+const MAX_QR_ATTEMPTS = 4
+
 interface ManagedSession {
   engine: WaEngine
   tenantId: string
   lastQr: string | null
+  qrCount: number
   listeners: Set<EngineEventListener>
 }
 
@@ -54,7 +57,13 @@ export class SessionManager {
     if (this.active.has(session.id)) return
     const factory = this.deps.registry[session.engine]
     const engine = factory(this.buildOptions(session.id, session.engine))
-    const managed: ManagedSession = { engine, tenantId, lastQr: null, listeners: new Set() }
+    const managed: ManagedSession = {
+      engine,
+      tenantId,
+      lastQr: null,
+      qrCount: 0,
+      listeners: new Set()
+    }
     this.active.set(session.id, managed)
     engine.onEvent((event) => {
       void this.handleEvent(session.id, managed, event)
@@ -100,15 +109,27 @@ export class SessionManager {
     event: EngineEvent
   ): Promise<void> {
     if (event.type === 'qr') {
+      managed.qrCount += 1
+      if (managed.qrCount > MAX_QR_ATTEMPTS) {
+        await this.stopOnQrLimit(sessionId, managed)
+        return
+      }
       managed.lastQr = event.qr
       await this.deps.repository.updateStatus(sessionId, 'qr').catch(() => undefined)
     } else if (event.type === 'connection') {
-      if (event.status === 'connected') managed.lastQr = null
+      if (event.status === 'connected') {
+        managed.lastQr = null
+        managed.qrCount = 0
+      }
       await this.deps.repository
         .updateStatus(sessionId, event.status, event.meJid ?? null)
         .catch(() => undefined)
     }
 
+    this.notify(sessionId, managed, event)
+  }
+
+  private notify(sessionId: string, managed: ManagedSession, event: EngineEvent): void {
     for (const listener of managed.listeners) {
       try {
         listener(event)
@@ -118,6 +139,17 @@ export class SessionManager {
     }
 
     this.deps.onEvent?.(managed.tenantId, sessionId, event)
+  }
+
+  private async stopOnQrLimit(sessionId: string, managed: ManagedSession): Promise<void> {
+    this.deps.logger.warn(
+      { session: sessionId, attempts: MAX_QR_ATTEMPTS },
+      'qr attempt limit reached, stopping session'
+    )
+    managed.lastQr = null
+    await this.stop(sessionId)
+    await this.deps.repository.updateStatus(sessionId, 'disconnected').catch(() => undefined)
+    this.notify(sessionId, managed, { type: 'connection', status: 'disconnected' })
   }
 
   async shutdown(): Promise<void> {
