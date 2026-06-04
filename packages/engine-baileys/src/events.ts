@@ -1,9 +1,16 @@
 import type {
   AckEvent,
+  CallEvent,
+  CallStatus,
+  GroupParticipantsEvent,
+  GroupUpdateEvent,
   InboundContent,
   InboundMedia,
+  MembershipRequestAction,
+  MembershipRequestEvent,
   MessageAckStatus,
   MessageEvent,
+  ParticipantAction,
   PresenceEvent,
   PresenceStatus,
   QuotedMessage
@@ -373,4 +380,110 @@ export function mapBaileysPresence(update: {
     status: mapPresenceStatus(data.lastKnownPresence),
     lastSeen: data.lastSeen ?? null
   }))
+}
+
+type BaileysCallInput = {
+  from?: string | null
+  id?: string | null
+  isGroup?: boolean | null
+  groupJid?: string | null
+  isVideo?: boolean | null
+  date?: Date | null
+  status?: string | null
+}
+
+const CALL_STATUSES = new Set(['offer', 'accept', 'reject', 'terminate'])
+
+export function mapBaileysCall(call: BaileysCallInput): CallEvent | null {
+  if (!call.status || !CALL_STATUSES.has(call.status) || !call.from) return null
+  return {
+    type: 'call',
+    status: call.status as CallStatus,
+    id: call.id ?? undefined,
+    from: call.from,
+    isGroup: call.isGroup ?? false,
+    groupJid: call.groupJid ?? undefined,
+    isVideo: call.isVideo ?? undefined,
+    timestamp: call.date ? Math.floor(call.date.getTime() / 1000) : undefined
+  }
+}
+
+type BaileysParticipantInput = { id?: string | null } | null
+
+type BaileysParticipantsInput = {
+  id?: string | null
+  author?: string | null
+  action?: string | null
+  participants?: BaileysParticipantInput[] | null
+}
+
+const PARTICIPANT_ACTIONS = new Set(['add', 'remove', 'promote', 'demote'])
+
+export function mapBaileysGroupParticipants(
+  update: BaileysParticipantsInput
+): GroupParticipantsEvent | null {
+  if (!update.id || !update.action || !PARTICIPANT_ACTIONS.has(update.action)) return null
+  const participants = (update.participants ?? [])
+    .map((p) => p?.id)
+    .filter((id): id is string => Boolean(id))
+  if (participants.length === 0) return null
+  return {
+    type: 'group_participants',
+    chat: update.id,
+    action: update.action as ParticipantAction,
+    participants,
+    author: update.author ?? undefined
+  }
+}
+
+type BaileysGroupUpdateInput = {
+  id?: string | null
+  subject?: string | null
+  desc?: string | null
+  announce?: boolean | null
+  restrict?: boolean | null
+  ephemeralDuration?: number | null
+  author?: string | null
+}
+
+export function mapBaileysGroupUpdate(update: BaileysGroupUpdateInput): GroupUpdateEvent | null {
+  if (!update.id) return null
+  const event: GroupUpdateEvent = { type: 'group_update', chat: update.id }
+  if (update.subject != null) event.subject = update.subject
+  if (update.desc != null) event.description = update.desc
+  if (update.announce != null) event.announce = update.announce
+  if (update.restrict != null) event.restrict = update.restrict
+  if (update.ephemeralDuration != null) event.ephemeralSeconds = update.ephemeralDuration
+  if (update.author != null) event.author = update.author
+  const hasField =
+    event.subject !== undefined ||
+    event.description !== undefined ||
+    event.announce !== undefined ||
+    event.restrict !== undefined ||
+    event.ephemeralSeconds !== undefined
+  return hasField ? event : null
+}
+
+type BaileysJoinRequestInput = {
+  id?: string | null
+  author?: string | null
+  participant?: string | null
+  action?: string | null
+}
+
+const MEMBERSHIP_ACTIONS = new Set(['created', 'revoked', 'rejected'])
+
+export function mapBaileysMembershipRequest(
+  update: BaileysJoinRequestInput
+): MembershipRequestEvent | null {
+  if (!update.id || !update.participant || !update.action || !MEMBERSHIP_ACTIONS.has(update.action)) {
+    return null
+  }
+  return {
+    type: 'membership_request',
+    chat: update.id,
+    action: update.action as MembershipRequestAction,
+    participant: update.participant,
+    author: update.author ?? undefined
+  }
 }
