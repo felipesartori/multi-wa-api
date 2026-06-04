@@ -393,13 +393,20 @@ type BaileysCallInput = {
   status?: string | null
 }
 
-const CALL_STATUSES = new Set(['offer', 'accept', 'reject', 'terminate'])
+const BAILEYS_CALL_STATUS: Record<string, CallStatus | undefined> = {
+  offer: 'offer',
+  accept: 'accept',
+  reject: 'reject',
+  terminate: 'terminate',
+  timeout: 'terminate'
+}
 
 export function mapBaileysCall(call: BaileysCallInput): CallEvent | null {
-  if (!call.status || !CALL_STATUSES.has(call.status) || !call.from) return null
+  const status = call.status ? BAILEYS_CALL_STATUS[call.status] : undefined
+  if (!status || !call.from) return null
   return {
     type: 'call',
-    status: call.status as CallStatus,
+    status,
     id: call.id ?? undefined,
     from: call.from,
     fromAlt: call.callerPn ?? undefined,

@@ -557,6 +557,12 @@ describe('mapBaileysCall', () => {
     expect(mapBaileysCall({ from: 'u', status: 'ringing', date: new Date(1730000000000) })).toBeNull()
     expect(mapBaileysCall({ status: 'offer', date: new Date(1730000000000) })).toBeNull()
   })
+
+  it('maps timeout to terminate (missed call)', () => {
+    expect(
+      mapBaileysCall({ from: 'u@s.whatsapp.net', status: 'timeout', date: new Date(1730000000000) })
+    ).toMatchObject({ status: 'terminate', from: 'u@s.whatsapp.net' })
+  })
 })
 
 describe('mapBaileysGroupParticipants', () => {
