@@ -238,6 +238,30 @@ describe('mapZapoMessageEvent', () => {
     expect(event.content).toEqual({ type: 'unknown' })
   })
 
+  it('exposes fromAlt (lid<->pn) from the key, omitting it when absent', () => {
+    const lidGroup = mapZapoMessageEvent(
+      base({
+        key: {
+          remoteJid: '123@g.us',
+          id: 'M4',
+          fromMe: false,
+          participant: '199@lid',
+          participantAlt: '55@s.whatsapp.net',
+          isGroup: true,
+          isBroadcast: false,
+          isNewsletter: false,
+          senderDevice: 0
+        },
+        message: { conversation: 'oi' }
+      })
+    )
+    expect(lidGroup.from).toBe('199@lid')
+    expect(lidGroup.fromAlt).toBe('55@s.whatsapp.net')
+
+    const plain = mapZapoMessageEvent(base({ message: { conversation: 'oi' } }))
+    expect(plain.fromAlt).toBeUndefined()
+  })
+
   it('includes mentions and quoted when present, omits them otherwise', () => {
     const plain = mapZapoMessageEvent(base({ message: { conversation: 'oi' } }))
     expect(plain).not.toHaveProperty('mentions')

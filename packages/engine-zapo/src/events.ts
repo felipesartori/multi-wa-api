@@ -236,6 +236,7 @@ export function mapZapoMessageEvent(event: WaIncomingMessageEvent): MessageEvent
     fromMe: Boolean(event.key.fromMe),
     isGroup: event.key.isGroup,
     participant: event.key.participant ?? undefined,
+    fromAlt: event.key.participantAlt ?? event.key.remoteJidAlt ?? undefined,
     pushName: event.pushName ?? undefined,
     timestamp: event.timestampSeconds ?? undefined,
     content: mapZapoContent(event.message),

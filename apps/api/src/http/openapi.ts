@@ -209,6 +209,11 @@ const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
         fromMe: { type: 'boolean' },
         isGroup: { type: 'boolean' },
         participant: { type: 'string' },
+        fromAlt: {
+          type: 'string',
+          description:
+            "Alternate addressing of `from` — the phone-number jid when `from` is a lid, or vice-versa. Omitted when the engine doesn't provide it."
+        },
         pushName: { type: 'string' },
         timestamp: { type: 'number' },
         content: INBOUND_CONTENT_SCHEMA,
@@ -314,7 +319,8 @@ const WEBHOOK_DELIVERY_EXAMPLES: Record<string, OpenAPIV3.ExampleObject> = {
       from: '5511888888888@s.whatsapp.net',
       fromMe: false,
       isGroup: true,
-      participant: '5511888888888@s.whatsapp.net',
+      participant: '199999999999999@lid',
+      fromAlt: '5511888888888@s.whatsapp.net',
       timestamp: 1730000000,
       content: { type: 'text', text: '@5511777777777 isso mesmo!' },
       mentions: ['5511777777777@s.whatsapp.net'],
@@ -349,7 +355,7 @@ const WEBHOOK_DESCRIPTION = [
   'Each delivery is a JSON POST to your `url` with one of these payloads:',
   '- `qr`: new QR code to scan.',
   '- `connection`: channel/connection state (`connecting`, `qr`, `connected`, `disconnected`, `logged_out`).',
-  '- `message`: inbound/outbound messages of any type. `content` is normalized and discriminated by `type` (text, image, video, audio, document, sticker, location, contact, reaction, poll, buttons_response, list_response). Group messages have `isGroup: true`, `chat` ending in `@g.us` and `participant` set to the author jid. `mentions` lists the jids mentioned in the message (omitted when none); `quoted` carries the replied-to message (`id`, `participant`, normalized `content`) when the message is a reply. Media payloads carry metadata only; fetch bytes separately.',
+  '- `message`: inbound/outbound messages of any type. `content` is normalized and discriminated by `type` (text, image, video, audio, document, sticker, location, contact, reaction, poll, buttons_response, list_response). Group messages have `isGroup: true`, `chat` ending in `@g.us` and `participant` set to the author jid. `fromAlt` carries the alternate addressing of `from` (the phone-number jid when `from` is a lid, or vice-versa) when the engine provides it. `mentions` lists the jids mentioned in the message (omitted when none); `quoted` carries the replied-to message (`id`, `participant`, normalized `content`) when the message is a reply. Media payloads carry metadata only; fetch bytes separately.',
   '- `ack`: message delivery status for the given `ids` (`pending`, `sent`, `delivered`, `read`, `played`, `error`).',
   '- `presence`: chat presence (`available`, `unavailable`, `composing`, `recording`, `paused`).',
   '',

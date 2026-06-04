@@ -232,6 +232,32 @@ describe('mapBaileysMessageEvent', () => {
     expect(event.content).toEqual({ type: 'unknown' })
   })
 
+  it('exposes fromAlt (lid<->pn) from the key, omitting it when absent', () => {
+    const lidGroup = mapBaileysMessageEvent({
+      key: {
+        remoteJid: '123@g.us',
+        id: 'M4',
+        participant: '199@lid',
+        participantAlt: '55@s.whatsapp.net'
+      },
+      message: { conversation: 'oi' }
+    })
+    expect(lidGroup.from).toBe('199@lid')
+    expect(lidGroup.fromAlt).toBe('55@s.whatsapp.net')
+
+    const lidDirect = mapBaileysMessageEvent({
+      key: { remoteJid: '199@lid', id: 'M5', remoteJidAlt: '55@s.whatsapp.net' },
+      message: { conversation: 'oi' }
+    })
+    expect(lidDirect.fromAlt).toBe('55@s.whatsapp.net')
+
+    const plain = mapBaileysMessageEvent({
+      key: { remoteJid: 'c@s.whatsapp.net', id: 'M6' },
+      message: { conversation: 'oi' }
+    })
+    expect(plain.fromAlt).toBeUndefined()
+  })
+
   it('includes mentions and quoted when present, omits them otherwise', () => {
     const plain = mapBaileysMessageEvent({
       key: { remoteJid: 'c@s.whatsapp.net', id: 'M1' },

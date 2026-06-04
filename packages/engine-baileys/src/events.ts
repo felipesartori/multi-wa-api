@@ -222,6 +222,7 @@ export function mapBaileysMessageEvent(message: WAMessage): MessageEvent {
     fromMe: Boolean(message.key.fromMe),
     isGroup: isGroupJid(chat),
     participant: message.key.participant ?? undefined,
+    fromAlt: message.key.participantAlt ?? message.key.remoteJidAlt ?? undefined,
     pushName: message.pushName ?? undefined,
     timestamp: toNumber(message.messageTimestamp),
     content: mapBaileysContent(message.message),
