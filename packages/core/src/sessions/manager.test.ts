@@ -109,6 +109,39 @@ describe('SessionManager', () => {
     expect(statuses.some((entry) => entry.status === 'connected')).toBe(true)
   })
 
+  it('stops the session after exceeding the qr attempt limit', async () => {
+    let engine: FakeEngine | undefined
+    const registry = {
+      baileys: (options: EngineOptions) => {
+        engine = new FakeEngine(options)
+        return engine
+      },
+      zapo: (options: EngineOptions) => new FakeEngine(options)
+    } as unknown as EngineRegistry
+    const { repo, statuses } = fakeRepo()
+    const events: EngineEvent[] = []
+    const manager = new SessionManager({
+      pool: {} as never,
+      tablePrefix: 'wa_',
+      logger,
+      registry,
+      repository: repo,
+      onEvent: (_tenantId, _sessionId, event) => events.push(event)
+    })
+
+    await manager.start(session, 'tenant1')
+    for (let i = 0; i < 5; i += 1) engine!.emit({ type: 'qr', qr: `QR${i}` })
+    await flush()
+
+    expect(events.filter((event) => event.type === 'qr')).toHaveLength(4)
+    expect(engine?.stopped).toBe(true)
+    expect(manager.isActive('s1')).toBe(false)
+    expect(statuses.at(-1)?.status).toBe('disconnected')
+    expect(
+      events.some((event) => event.type === 'connection' && event.status === 'disconnected')
+    ).toBe(true)
+  })
+
   it('is idempotent on start and stops/logs out engines', async () => {
     let engine: FakeEngine | undefined
     const registry = {
