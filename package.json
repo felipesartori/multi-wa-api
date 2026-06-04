@@ -13,6 +13,7 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "dev": "pnpm --filter @multi-wa/api dev",
+    "start": "pnpm --filter @multi-wa/api start",
     "db:migrate": "pnpm --filter @multi-wa/db migrate",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
