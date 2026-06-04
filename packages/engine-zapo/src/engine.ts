@@ -1,6 +1,7 @@
+import type { Readable } from 'node:stream'
 import { errors, type EngineOptions, type WaEngine } from '@multi-wa/core'
-import type { EngineEvent, MessageContent, SendMessageResult } from '@multi-wa/types'
-import { WaClient } from 'zapo-js'
+import type { EngineEvent, MediaRef, MessageContent, SendMessageResult } from '@multi-wa/types'
+import { downloadMediaMessage, WaClient } from 'zapo-js'
 import type { PgCleanupPoller } from '@zapo-js/store-postgres'
 import { buildZapoStore, type ZapoStoreBundle } from './store'
 import { mapZapoChatstate, mapZapoMessageEvent, mapZapoPresence, mapZapoReceipt } from './events'
@@ -146,6 +147,38 @@ export class ZapoEngine implements WaEngine {
   async send(to: string, content: MessageContent): Promise<SendMessageResult> {
     const result = await this.requireClient().message.send(to, await toZapoContent(content))
     return { id: result.id }
+  }
+
+  async downloadMedia(ref: MediaRef): Promise<Readable> {
+    if (!ref.media.mediaKey || !ref.media.directPath) {
+      throw errors.badRequest('media reference is missing mediaKey or directPath')
+    }
+    return downloadMediaMessage(buildMediaMessage(ref))
+  }
+}
+
+function buildMediaMessage(ref: MediaRef) {
+  const media = {
+    url: ref.media.url ?? undefined,
+    directPath: ref.media.directPath ?? undefined,
+    mediaKey: ref.media.mediaKey ? Buffer.from(ref.media.mediaKey, 'base64') : undefined,
+    mimetype: ref.media.mimetype ?? undefined,
+    fileEncSha256: ref.media.fileEncSha256
+      ? Buffer.from(ref.media.fileEncSha256, 'base64')
+      : undefined,
+    fileSha256: ref.media.fileSha256 ? Buffer.from(ref.media.fileSha256, 'base64') : undefined
+  }
+  switch (ref.type) {
+    case 'image':
+      return { imageMessage: media }
+    case 'video':
+      return { videoMessage: media }
+    case 'audio':
+      return { audioMessage: media }
+    case 'document':
+      return { documentMessage: media }
+    case 'sticker':
+      return { stickerMessage: media }
   }
 }
 

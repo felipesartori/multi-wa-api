@@ -65,12 +65,20 @@ function messageExamples(): Record<string, OpenAPIV3.ExampleObject> {
 
 const INBOUND_MEDIA_SCHEMA: OpenAPIV3.SchemaObject = {
   type: 'object',
+  description:
+    'Media metadata. In `none` storage mode it also carries the download pointers (directPath, url, mediaKey, fileEncSha256, fileSha256) so the client can fetch bytes via POST /sessions/:id/media/download. In `s3` mode the pointers are dropped and `url` is the public link with `stored: "s3"`.',
   properties: {
     mimetype: { type: 'string' },
     size: { type: 'number' },
     width: { type: 'number' },
     height: { type: 'number' },
-    seconds: { type: 'number' }
+    seconds: { type: 'number' },
+    directPath: { type: 'string' },
+    url: { type: 'string' },
+    mediaKey: { type: 'string' },
+    fileEncSha256: { type: 'string' },
+    fileSha256: { type: 'string' },
+    stored: { type: 'string', enum: ['s3'] }
   }
 }
 
@@ -324,6 +332,19 @@ function decorateWebhooks(doc: OpenAPIV3.Document): void {
   if (post) post.description = WEBHOOK_DESCRIPTION
 }
 
+function decorateMediaDownload(doc: OpenAPIV3.Document): void {
+  const post = doc.paths?.['/sessions/{id}/media/download']?.post as
+    | OpenAPIV3.OperationObject
+    | undefined
+  if (!post) return
+  post.responses[200] = {
+    description: 'Raw media bytes',
+    content: {
+      'application/octet-stream': { schema: { type: 'string', format: 'binary' } }
+    }
+  }
+}
+
 export function decorateOpenApi(doc: OpenAPIV3.Document): OpenAPIV3.Document {
   for (const path of Object.values(doc.paths ?? {})) {
     for (const operation of Object.values(path ?? {})) {
@@ -344,6 +365,7 @@ export function decorateOpenApi(doc: OpenAPIV3.Document): OpenAPIV3.Document {
   if (json) json.examples = messageExamples()
 
   decorateWebhooks(doc)
+  decorateMediaDownload(doc)
 
   return doc
 }

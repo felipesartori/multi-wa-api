@@ -175,6 +175,28 @@ describe('mapBaileysContent', () => {
     expect(mapBaileysContent(null)).toEqual({ type: 'unknown' })
     expect(mapBaileysContent(undefined)).toEqual({ type: 'unknown' })
   })
+
+  it('includes base64 download pointers in media', () => {
+    const out = mapBaileysContent({
+      imageMessage: {
+        mediaKey: new Uint8Array([1, 2, 3]),
+        directPath: '/v/x',
+        url: 'https://cdn/x',
+        fileEncSha256: new Uint8Array([4]),
+        fileSha256: new Uint8Array([5])
+      }
+    })
+    expect(out).toMatchObject({
+      type: 'image',
+      media: {
+        directPath: '/v/x',
+        url: 'https://cdn/x',
+        mediaKey: Buffer.from([1, 2, 3]).toString('base64'),
+        fileEncSha256: Buffer.from([4]).toString('base64'),
+        fileSha256: Buffer.from([5]).toString('base64')
+      }
+    })
+  })
 })
 
 describe('mapBaileysMessageEvent', () => {
