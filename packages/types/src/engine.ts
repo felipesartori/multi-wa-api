@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 export const engineKindSchema = z.enum(['zapo', 'baileys'])
 export type EngineKind = z.infer<typeof engineKindSchema>

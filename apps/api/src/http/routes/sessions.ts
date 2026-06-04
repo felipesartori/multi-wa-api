@@ -4,42 +4,37 @@ import {
   qrSchema,
   sessionSchema
 } from '@multi-wa/types'
-import type { FastifyInstance } from 'fastify'
 import QRCode from 'qrcode'
+import { z } from 'zod/v4'
 import type { Container } from '../../container'
-import { arrayOf, ID_PARAMS, jsonSchema, NO_CONTENT, routeSchema } from '../openapi'
+import { SECURITY } from '../openapi'
 import { streamEvents } from '../sse'
-import { parse } from '../validation'
+import type { AppInstance } from '../types'
 
-const SESSION = jsonSchema(sessionSchema)
+const idParam = z.object({ id: z.string() })
 
-const MIGRATION_RESULT = {
-  type: 'object',
-  properties: {
-    session: SESSION,
-    losses: {
-      type: 'array',
-      items: { type: 'object', additionalProperties: true }
-    }
-  }
-}
+const migrationResultSchema = z.object({
+  session: sessionSchema,
+  losses: z.array(z.object({ domain: z.string(), severity: z.string(), count: z.number() }))
+})
 
-export function sessionRoutes(app: FastifyInstance, container: Container): void {
+export function sessionRoutes(app: AppInstance, container: Container): void {
   app.post(
     '/',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Create and start a session',
-        description: 'Creates a session on the chosen engine and begins pairing.',
+        security: SECURITY,
         body: createSessionInputSchema,
-        secured: true,
-        response: { 201: SESSION }
-      })
+        response: { 201: sessionSchema }
+      }
     },
     async (request, reply) => {
-      const input = parse(createSessionInputSchema, request.body)
-      const session = await container.sessionService.create(request.principal.tenantId, input)
+      const session = await container.sessionService.create(
+        request.principal.tenantId,
+        request.body
+      )
       return reply.status(201).send(session)
     }
   )
@@ -47,12 +42,12 @@ export function sessionRoutes(app: FastifyInstance, container: Container): void 
   app.get(
     '/',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'List sessions',
-        secured: true,
-        response: { 200: arrayOf(sessionSchema) }
-      })
+        security: SECURITY,
+        response: { 200: z.array(sessionSchema) }
+      }
     },
     async (request) => container.sessionService.list(request.principal.tenantId)
   )
@@ -60,34 +55,30 @@ export function sessionRoutes(app: FastifyInstance, container: Container): void 
   app.get(
     '/:id',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Get a session',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: SESSION }
-      })
+        security: SECURITY,
+        params: idParam,
+        response: { 200: sessionSchema }
+      }
     },
-    async (request) => {
-      const { id } = request.params as { id: string }
-      return container.sessionService.get(request.principal.tenantId, id)
-    }
+    async (request) => container.sessionService.get(request.principal.tenantId, request.params.id)
   )
 
   app.get(
     '/:id/qr',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Get the pairing QR (string + data URL)',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: jsonSchema(qrSchema) }
-      })
+        security: SECURITY,
+        params: idParam,
+        response: { 200: qrSchema }
+      }
     },
     async (request) => {
-      const { id } = request.params as { id: string }
-      const qr = await container.sessionService.getQr(request.principal.tenantId, id)
+      const qr = await container.sessionService.getQr(request.principal.tenantId, request.params.id)
       return { qr, dataUrl: qr ? await QRCode.toDataURL(qr) : null }
     }
   )
@@ -95,86 +86,77 @@ export function sessionRoutes(app: FastifyInstance, container: Container): void 
   app.get(
     '/:id/events',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Stream session events (Server-Sent Events)',
         description: 'Emits qr, status and message events as text/event-stream.',
-        params: ID_PARAMS,
-        secured: true
-      })
+        security: SECURITY,
+        params: idParam
+      }
     },
     async (request, reply) => {
-      const { id } = request.params as { id: string }
-      await container.sessionService.connect(request.principal.tenantId, id)
-      streamEvents(request, reply, container.manager, id)
+      await container.sessionService.connect(request.principal.tenantId, request.params.id)
+      streamEvents(request, reply, container.manager, request.params.id)
     }
   )
 
   app.post(
     '/:id/connect',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Connect a session',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: SESSION }
-      })
+        security: SECURITY,
+        params: idParam,
+        response: { 200: sessionSchema }
+      }
     },
-    async (request) => {
-      const { id } = request.params as { id: string }
-      return container.sessionService.connect(request.principal.tenantId, id)
-    }
+    async (request) =>
+      container.sessionService.connect(request.principal.tenantId, request.params.id)
   )
 
   app.post(
     '/:id/disconnect',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Disconnect a session (keeps credentials)',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: SESSION }
-      })
+        security: SECURITY,
+        params: idParam,
+        response: { 200: sessionSchema }
+      }
     },
-    async (request) => {
-      const { id } = request.params as { id: string }
-      return container.sessionService.disconnect(request.principal.tenantId, id)
-    }
+    async (request) =>
+      container.sessionService.disconnect(request.principal.tenantId, request.params.id)
   )
 
   app.post(
     '/:id/logout',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Logout a session (wipes credentials)',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: SESSION }
-      })
+        security: SECURITY,
+        params: idParam,
+        response: { 200: sessionSchema }
+      }
     },
-    async (request) => {
-      const { id } = request.params as { id: string }
-      return container.sessionService.logout(request.principal.tenantId, id)
-    }
+    async (request) =>
+      container.sessionService.logout(request.principal.tenantId, request.params.id)
   )
 
   app.delete(
     '/:id',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Delete a session',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 204: NO_CONTENT }
-      })
+        security: SECURITY,
+        params: idParam
+      }
     },
     async (request, reply) => {
-      const { id } = request.params as { id: string }
-      await container.sessionService.remove(request.principal.tenantId, id)
+      await container.sessionService.remove(request.principal.tenantId, request.params.id)
       return reply.status(204).send()
     }
   )
@@ -182,19 +164,20 @@ export function sessionRoutes(app: FastifyInstance, container: Container): void 
   app.post(
     '/:id/migrate',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['sessions'],
         summary: 'Migrate a session to another engine without re-pairing',
+        security: SECURITY,
+        params: idParam,
         body: migrateSessionInputSchema,
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: MIGRATION_RESULT }
-      })
+        response: { 200: migrationResultSchema }
+      }
     },
-    async (request) => {
-      const { id } = request.params as { id: string }
-      const input = parse(migrateSessionInputSchema, request.body)
-      return container.sessionService.migrate(request.principal.tenantId, id, input.to)
-    }
+    async (request) =>
+      container.sessionService.migrate(
+        request.principal.tenantId,
+        request.params.id,
+        request.body.to
+      )
   )
 }

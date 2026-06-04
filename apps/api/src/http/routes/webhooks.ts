@@ -1,25 +1,29 @@
 import { createWebhookInputSchema, webhookCreatedSchema, webhookSchema } from '@multi-wa/types'
-import type { FastifyInstance } from 'fastify'
+import { z } from 'zod/v4'
 import type { Container } from '../../container'
-import { arrayOf, ID_PARAMS, jsonSchema, NO_CONTENT, routeSchema } from '../openapi'
-import { parse } from '../validation'
+import { SECURITY } from '../openapi'
+import type { AppInstance } from '../types'
 
-export function webhookRoutes(app: FastifyInstance, container: Container): void {
+const idParam = z.object({ id: z.string() })
+
+export function webhookRoutes(app: AppInstance, container: Container): void {
   app.post(
     '/',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['webhooks'],
         summary: 'Register a webhook',
         description: 'Deliveries are signed with HMAC-SHA256 in the X-Signature header.',
+        security: SECURITY,
         body: createWebhookInputSchema,
-        secured: true,
-        response: { 201: jsonSchema(webhookCreatedSchema) }
-      })
+        response: { 201: webhookCreatedSchema }
+      }
     },
     async (request, reply) => {
-      const input = parse(createWebhookInputSchema, request.body)
-      const webhook = await container.webhookService.create(request.principal.tenantId, input)
+      const webhook = await container.webhookService.create(
+        request.principal.tenantId,
+        request.body
+      )
       return reply.status(201).send(webhook)
     }
   )
@@ -27,12 +31,12 @@ export function webhookRoutes(app: FastifyInstance, container: Container): void 
   app.get(
     '/',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['webhooks'],
         summary: 'List webhooks',
-        secured: true,
-        response: { 200: arrayOf(webhookSchema) }
-      })
+        security: SECURITY,
+        response: { 200: z.array(webhookSchema) }
+      }
     },
     async (request) => container.webhookService.list(request.principal.tenantId)
   )
@@ -40,17 +44,15 @@ export function webhookRoutes(app: FastifyInstance, container: Container): void 
   app.delete(
     '/:id',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['webhooks'],
         summary: 'Delete a webhook',
-        params: ID_PARAMS,
-        secured: true,
-        response: { 204: NO_CONTENT }
-      })
+        security: SECURITY,
+        params: idParam
+      }
     },
     async (request, reply) => {
-      const { id } = request.params as { id: string }
-      await container.webhookService.delete(request.principal.tenantId, id)
+      await container.webhookService.delete(request.principal.tenantId, request.params.id)
       return reply.status(204).send()
     }
   )

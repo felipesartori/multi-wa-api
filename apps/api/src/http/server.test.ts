@@ -7,7 +7,7 @@ import { buildApp } from './server'
 const principal = { userId: 'u1', tenantId: 't1' }
 
 const session = {
-  id: 's1',
+  id: '11111111-1111-4111-8111-111111111111',
   name: 'main',
   engine: 'baileys' as const,
   status: 'created' as const,
@@ -101,7 +101,7 @@ describe('api routes', () => {
       payload: { name: 'main', engine: 'baileys' }
     })
     expect(res.statusCode).toBe(201)
-    expect(res.json().id).toBe('s1')
+    expect(res.json().id).toBe(session.id)
   })
 
   it('returns 400 on invalid session payload', async () => {

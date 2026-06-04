@@ -6,15 +6,23 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import underPressure from '@fastify/under-pressure'
 import Fastify, { type FastifyInstance } from 'fastify'
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider
+} from 'fastify-type-provider-zod'
+import type { OpenAPIV3 } from 'openapi-types'
 import type { Container } from '../container'
 import { registerAuth } from './auth'
 import { errorHandler } from './error'
-import { messageRequestExamples } from './openapi'
+import { decorateOpenApi } from './openapi'
 import { authRoutes } from './routes/auth'
 import { healthRoutes } from './routes/health'
 import { messageRoutes } from './routes/messages'
 import { sessionRoutes } from './routes/sessions'
 import { webhookRoutes } from './routes/webhooks'
+import type { AppInstance } from './types'
 
 export async function buildApp(container: Container): Promise<FastifyInstance> {
   const app = Fastify({
@@ -29,12 +37,19 @@ export async function buildApp(container: Container): Promise<FastifyInstance> {
           }
         : { level: container.config.LOG_LEVEL },
     bodyLimit: container.config.BODY_LIMIT,
-    trustProxy: true,
-    ajv: { customOptions: { strictSchema: false } }
-  })
+    trustProxy: true
+  }).withTypeProvider<ZodTypeProvider>()
+
+  app.setValidatorCompiler(validatorCompiler)
+  app.setSerializerCompiler(serializerCompiler)
 
   await app.register(helmet, { contentSecurityPolicy: false })
   await app.register(cors, { origin: parseCorsOrigins(container.config.CORS_ORIGINS) })
+  await app.register(rateLimit, {
+    max: container.config.RATE_LIMIT_MAX,
+    timeWindow: container.config.RATE_LIMIT_WINDOW
+  })
+  await app.register(underPressure, { maxEventLoopDelay: 1000 })
 
   await app.register(swagger, {
     openapi: {
@@ -46,54 +61,41 @@ export async function buildApp(container: Container): Promise<FastifyInstance> {
         }
       }
     },
-    transformObject: (input) => {
-      const openapiObject = (input as { openapiObject?: unknown }).openapiObject ?? input
-      const spec = openapiObject as {
-        paths?: Record<
-          string,
-          Record<string, { requestBody?: { content?: Record<string, { examples?: unknown }> } }>
-        >
-      }
-      const media =
-        spec.paths?.['/sessions/{id}/messages']?.post?.requestBody?.content?.['application/json']
-      if (media) media.examples = messageRequestExamples()
-      return openapiObject as never
-    }
+    transform: jsonSchemaTransform,
+    transformObject: (input) =>
+      decorateOpenApi((input as { openapiObject: OpenAPIV3.Document }).openapiObject)
   })
   await app.register(swaggerUi, { routePrefix: '/docs' })
-  await app.register(rateLimit, {
-    max: container.config.RATE_LIMIT_MAX,
-    timeWindow: container.config.RATE_LIMIT_WINDOW
-  })
-  await app.register(underPressure, { maxEventLoopDelay: 1000 })
 
   await registerAuth(app, container)
   app.setErrorHandler(errorHandler)
 
   await app.register(async (instance) => {
-    healthRoutes(instance, container)
+    healthRoutes(instance.withTypeProvider<ZodTypeProvider>(), container)
   })
 
   await app.register(
     async (instance) => {
-      authRoutes(instance, container)
+      authRoutes(instance.withTypeProvider<ZodTypeProvider>(), container)
     },
     { prefix: '/auth' }
   )
 
   await app.register(
     async (instance) => {
-      instance.addHook('preHandler', instance.authenticate)
-      sessionRoutes(instance, container)
-      messageRoutes(instance, container)
+      const scoped: AppInstance = instance.withTypeProvider<ZodTypeProvider>()
+      scoped.addHook('preHandler', scoped.authenticate)
+      sessionRoutes(scoped, container)
+      messageRoutes(scoped, container)
     },
     { prefix: '/sessions' }
   )
 
   await app.register(
     async (instance) => {
-      instance.addHook('preHandler', instance.authenticate)
-      webhookRoutes(instance, container)
+      const scoped: AppInstance = instance.withTypeProvider<ZodTypeProvider>()
+      scoped.addHook('preHandler', scoped.authenticate)
+      webhookRoutes(scoped, container)
     },
     { prefix: '/webhooks' }
   )

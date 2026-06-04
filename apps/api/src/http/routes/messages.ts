@@ -1,29 +1,29 @@
 import { sendMessageInputSchema, sendMessageResultSchema } from '@multi-wa/types'
-import type { FastifyInstance } from 'fastify'
+import { z } from 'zod/v4'
 import type { Container } from '../../container'
-import { ID_PARAMS, jsonSchema, routeSchema, sendMessageBodyJson } from '../openapi'
-import { parse } from '../validation'
+import { SECURITY } from '../openapi'
+import type { AppInstance } from '../types'
 
-export function messageRoutes(app: FastifyInstance, container: Container): void {
+const idParam = z.object({ id: z.string() })
+
+export function messageRoutes(app: AppInstance, container: Container): void {
   app.post(
     '/:id/messages',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['messages'],
         summary: 'Send a normalized message',
         description:
           'Engine-agnostic content. content.type is one of text, image, video, audio, document, sticker, location, contact.',
-        bodyJson: sendMessageBodyJson(),
-        params: ID_PARAMS,
-        secured: true,
-        response: { 200: jsonSchema(sendMessageResultSchema) }
-      })
+        security: SECURITY,
+        params: idParam,
+        body: sendMessageInputSchema,
+        response: { 200: sendMessageResultSchema }
+      }
     },
     async (request) => {
-      const { id } = request.params as { id: string }
-      await container.sessionService.get(request.principal.tenantId, id)
-      const input = parse(sendMessageInputSchema, request.body)
-      return container.messagingService.send(id, input)
+      await container.sessionService.get(request.principal.tenantId, request.params.id)
+      return container.messagingService.send(request.params.id, request.body)
     }
   )
 }

@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 export const mediaSourceSchema = z.union([
-  z.object({ url: z.string().url() }),
+  z.object({ url: z.url() }),
   z.object({ base64: z.string().min(1) })
 ])
 export type MediaSource = z.infer<typeof mediaSourceSchema>

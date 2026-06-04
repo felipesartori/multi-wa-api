@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 export const loginInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1)
 })
 export type LoginInput = z.infer<typeof loginInputSchema>
@@ -24,7 +24,7 @@ export const createApiKeyInputSchema = z.object({
 export type CreateApiKeyInput = z.infer<typeof createApiKeyInputSchema>
 
 export const apiKeySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
   prefix: z.string(),
   createdAt: z.string(),

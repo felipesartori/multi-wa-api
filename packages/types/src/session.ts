@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 import { engineKindSchema, engineStatusSchema } from './engine'
 
 export const createSessionInputSchema = z.object({
@@ -13,7 +13,7 @@ export const migrateSessionInputSchema = z.object({
 export type MigrateSessionInput = z.infer<typeof migrateSessionInputSchema>
 
 export const sessionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string(),
   engine: engineKindSchema,
   status: engineStatusSchema,

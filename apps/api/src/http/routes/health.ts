@@ -1,34 +1,24 @@
-import type { FastifyInstance } from 'fastify'
+import { z } from 'zod/v4'
 import type { Container } from '../../container'
-import { routeSchema } from '../openapi'
+import type { AppInstance } from '../types'
 
-const STATUS_RESPONSE = {
-  type: 'object',
-  properties: { status: { type: 'string' } },
-  required: ['status']
-}
+const statusSchema = z.object({ status: z.string() })
 
-export function healthRoutes(app: FastifyInstance, container: Container): void {
+export function healthRoutes(app: AppInstance, container: Container): void {
   app.get(
     '/health',
-    {
-      schema: routeSchema({
-        tags: ['health'],
-        summary: 'Liveness probe',
-        response: { 200: STATUS_RESPONSE }
-      })
-    },
+    { schema: { tags: ['health'], summary: 'Liveness probe', response: { 200: statusSchema } } },
     async () => ({ status: 'ok' })
   )
 
   app.get(
     '/ready',
     {
-      schema: routeSchema({
+      schema: {
         tags: ['health'],
         summary: 'Readiness probe (checks the database)',
-        response: { 200: STATUS_RESPONSE, 503: STATUS_RESPONSE }
-      })
+        response: { 200: statusSchema, 503: statusSchema }
+      }
     },
     async (_request, reply) => {
       try {

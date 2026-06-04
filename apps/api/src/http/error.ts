@@ -1,5 +1,9 @@
 import { AppError } from '@multi-wa/core'
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
+import {
+  hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError
+} from 'fastify-type-provider-zod'
 
 export function errorHandler(
   error: FastifyError,
@@ -10,6 +14,20 @@ export function errorHandler(
     void reply
       .status(error.statusCode)
       .send({ error: { code: error.code, message: error.message } })
+    return
+  }
+
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    const message = error.validation.map((issue) => issue.message).join('; ') || 'invalid request'
+    void reply.status(400).send({ error: { code: 'bad_request', message } })
+    return
+  }
+
+  if (isResponseSerializationError(error)) {
+    request.log.error({ err: error }, 'response serialization error')
+    void reply
+      .status(500)
+      .send({ error: { code: 'internal_error', message: 'internal server error' } })
     return
   }
 

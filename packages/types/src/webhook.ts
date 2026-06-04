@@ -1,17 +1,17 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 export const webhookEventTypeSchema = z.enum(['qr', 'status', 'message'])
 export type WebhookEventType = z.infer<typeof webhookEventTypeSchema>
 
 export const createWebhookInputSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
   events: z.array(webhookEventTypeSchema).min(1),
   secret: z.string().min(16).max(256).optional()
 })
 export type CreateWebhookInput = z.infer<typeof createWebhookInputSchema>
 
 export const webhookSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   url: z.string(),
   events: z.array(webhookEventTypeSchema),
   active: z.boolean(),
