@@ -63,6 +63,103 @@ function messageExamples(): Record<string, OpenAPIV3.ExampleObject> {
   return examples
 }
 
+const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
+  oneOf: [
+    {
+      type: 'object',
+      required: ['type', 'qr'],
+      properties: { type: { type: 'string', enum: ['qr'] }, qr: { type: 'string' } }
+    },
+    {
+      type: 'object',
+      required: ['type', 'status'],
+      properties: {
+        type: { type: 'string', enum: ['status'] },
+        status: {
+          type: 'string',
+          enum: ['created', 'connecting', 'qr', 'connected', 'disconnected', 'logged_out']
+        },
+        meJid: { type: 'string' }
+      }
+    },
+    {
+      type: 'object',
+      required: ['type', 'chat', 'from', 'fromMe'],
+      properties: {
+        type: { type: 'string', enum: ['message'] },
+        id: { type: 'string' },
+        chat: { type: 'string' },
+        from: { type: 'string' },
+        fromMe: { type: 'boolean' },
+        text: { type: 'string' },
+        timestamp: { type: 'number' }
+      }
+    }
+  ]
+}
+
+const WEBHOOK_DELIVERY_EXAMPLES: Record<string, OpenAPIV3.ExampleObject> = {
+  qr: { summary: 'qr event', value: { type: 'qr', qr: '2@abc123...' } },
+  connected: {
+    summary: 'status event (connected)',
+    value: { type: 'status', status: 'connected', meJid: '5511999999999@s.whatsapp.net' }
+  },
+  disconnected: {
+    summary: 'status event (disconnected)',
+    value: { type: 'status', status: 'disconnected' }
+  },
+  logged_out: {
+    summary: 'status event (logged out)',
+    value: { type: 'status', status: 'logged_out' }
+  },
+  message: {
+    summary: 'message event (direct)',
+    value: {
+      type: 'message',
+      id: '3EB0...',
+      chat: '5511888888888@s.whatsapp.net',
+      from: '5511888888888@s.whatsapp.net',
+      fromMe: false,
+      text: 'Oi!',
+      timestamp: 1730000000
+    }
+  },
+  group_message: {
+    summary: 'message event (group)',
+    value: {
+      type: 'message',
+      id: '3EB0...',
+      chat: '120363000000000000@g.us',
+      from: '5511888888888@s.whatsapp.net',
+      fromMe: false,
+      text: 'Olá grupo!',
+      timestamp: 1730000000
+    }
+  }
+}
+
+const WEBHOOK_DESCRIPTION = [
+  'Deliveries are signed with HMAC-SHA256 in the X-Signature header.',
+  '',
+  'Each delivery is a JSON POST to your `url` with one of these payloads:',
+  '- `qr`: new QR code to scan.',
+  '- `status`: connection/channel state (`connecting`, `qr`, `connected`, `disconnected`, `logged_out`).',
+  '- `message`: inbound/outbound messages. Group messages have `chat` ending in `@g.us` and `from` set to the participant jid.',
+  '',
+  'See the WebhookDelivery schema for the full payload shapes and examples.'
+].join('\n')
+
+function decorateWebhooks(doc: OpenAPIV3.Document): void {
+  doc.components ??= {}
+  doc.components.schemas ??= {}
+  doc.components.schemas.WebhookDelivery = {
+    ...WEBHOOK_DELIVERY_SCHEMA,
+    example: WEBHOOK_DELIVERY_EXAMPLES.connected!.value
+  } as OpenAPIV3.SchemaObject
+  const post = doc.paths?.['/webhooks/']?.post as OpenAPIV3.OperationObject | undefined
+  if (post) post.description = WEBHOOK_DESCRIPTION
+}
+
 export function decorateOpenApi(doc: OpenAPIV3.Document): OpenAPIV3.Document {
   for (const path of Object.values(doc.paths ?? {})) {
     for (const operation of Object.values(path ?? {})) {
@@ -81,6 +178,8 @@ export function decorateOpenApi(doc: OpenAPIV3.Document): OpenAPIV3.Document {
     | undefined
   const json = media?.content?.['application/json']
   if (json) json.examples = messageExamples()
+
+  decorateWebhooks(doc)
 
   return doc
 }
