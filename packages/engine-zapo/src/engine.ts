@@ -13,7 +13,6 @@ export class ZapoEngine implements WaEngine {
   readonly kind = 'zapo' as const
   readonly groups = createZapoGroups(() => this.requireClient().group)
   private client: WaClient | null = null
-  private ready = false
   private bundle: ZapoStoreBundle | null = null
   private poller: PgCleanupPoller | null = null
   private handler: ((event: EngineEvent) => void) | null = null
@@ -91,7 +90,6 @@ export class ZapoEngine implements WaEngine {
 
   private async handleConnection(event: { status: string; isLogout?: boolean }): Promise<void> {
     if (event.status === 'open') {
-      this.ready = true
       const credentials = await this.ensureBundle()
         .store.session(this.options.sessionId)
         .auth.load()
@@ -101,7 +99,6 @@ export class ZapoEngine implements WaEngine {
     }
 
     if (event.status === 'close') {
-      this.ready = false
       this.client = null
       if (event.isLogout) {
         await this.destroyBundle()
@@ -121,7 +118,6 @@ export class ZapoEngine implements WaEngine {
 
   async stop(): Promise<void> {
     this.stopping = true
-    this.ready = false
     await this.client?.disconnect().catch(() => undefined)
     this.client = null
     await this.destroyBundle()
@@ -129,7 +125,6 @@ export class ZapoEngine implements WaEngine {
 
   async logout(): Promise<void> {
     this.stopping = true
-    this.ready = false
     try {
       await this.client?.logout()
     } finally {
@@ -139,7 +134,7 @@ export class ZapoEngine implements WaEngine {
   }
 
   private requireClient(): WaClient {
-    if (!this.client || !this.ready) throw errors.conflict('session is not connected')
+    if (!this.client) throw errors.conflict('session is not connected')
     return this.client
   }
 

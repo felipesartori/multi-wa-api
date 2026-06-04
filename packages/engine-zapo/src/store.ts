@@ -20,9 +20,9 @@ export function buildZapoStore(pool: Pool, tablePrefix: string): ZapoStoreBundle
       senderKey: 'pg',
       appState: 'pg',
       privacyToken: 'pg',
-      messages: 'pg',
-      threads: 'pg',
-      contacts: 'pg'
+      messages: 'none',
+      threads: 'none',
+      contacts: 'none'
     }
   })
   return { result, store }
