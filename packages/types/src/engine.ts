@@ -56,6 +56,7 @@ export const messageEventSchema = z.object({
   fromMe: z.boolean(),
   isGroup: z.boolean(),
   participant: z.string().optional(),
+  fromAlt: z.string().optional(),
   pushName: z.string().optional(),
   timestamp: z.number().optional(),
   content: inboundContentSchema,
