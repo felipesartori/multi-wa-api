@@ -489,6 +489,7 @@ describe('mapZapoCall', () => {
         type: 'offer',
         callId: 'c1',
         callerPnJid: 'u@s.whatsapp.net',
+        senderLidJid: '99@lid',
         isVideo: false,
         timestampSeconds: 1730000000
       })
@@ -497,6 +498,7 @@ describe('mapZapoCall', () => {
       status: 'offer',
       id: 'c1',
       from: 'u@s.whatsapp.net',
+      fromAlt: '99@lid',
       isGroup: false,
       groupJid: undefined,
       isVideo: false,
@@ -551,14 +553,18 @@ describe('mapZapoGroup', () => {
       mapZapoGroup({
         action: 'created_membership_requests',
         groupJid: 'g@g.us',
-        membershipRequests: [{ jid: 'a@s.whatsapp.net' }, { phoneJid: 'b@s.whatsapp.net' }]
+        membershipRequests: [
+          { jid: 'a@lid', phoneJid: '5511888888888@s.whatsapp.net' },
+          { phoneJid: 'b@s.whatsapp.net' }
+        ]
       })
     ).toEqual([
       {
         type: 'membership_request',
         chat: 'g@g.us',
         action: 'created',
-        participant: 'a@s.whatsapp.net'
+        participant: 'a@lid',
+        participantAlt: '5511888888888@s.whatsapp.net'
       },
       {
         type: 'membership_request',

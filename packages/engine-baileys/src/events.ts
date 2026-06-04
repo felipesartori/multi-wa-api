@@ -384,6 +384,7 @@ export function mapBaileysPresence(update: {
 
 type BaileysCallInput = {
   from?: string | null
+  callerPn?: string | null
   id?: string | null
   isGroup?: boolean | null
   groupJid?: string | null
@@ -401,6 +402,7 @@ export function mapBaileysCall(call: BaileysCallInput): CallEvent | null {
     status: call.status as CallStatus,
     id: call.id ?? undefined,
     from: call.from,
+    fromAlt: call.callerPn ?? undefined,
     isGroup: call.isGroup ?? false,
     groupJid: call.groupJid ?? undefined,
     isVideo: call.isVideo ?? undefined,
@@ -413,6 +415,7 @@ type BaileysParticipantInput = { id?: string | null } | null
 type BaileysParticipantsInput = {
   id?: string | null
   author?: string | null
+  authorPn?: string | null
   action?: string | null
   participants?: BaileysParticipantInput[] | null
 }
@@ -432,7 +435,8 @@ export function mapBaileysGroupParticipants(
     chat: update.id,
     action: update.action as ParticipantAction,
     participants,
-    author: update.author ?? undefined
+    author: update.author ?? undefined,
+    authorAlt: update.authorPn ?? undefined
   }
 }
 
@@ -444,6 +448,7 @@ type BaileysGroupUpdateInput = {
   restrict?: boolean | null
   ephemeralDuration?: number | null
   author?: string | null
+  authorPn?: string | null
 }
 
 export function mapBaileysGroupUpdate(update: BaileysGroupUpdateInput): GroupUpdateEvent | null {
@@ -455,6 +460,7 @@ export function mapBaileysGroupUpdate(update: BaileysGroupUpdateInput): GroupUpd
   if (update.restrict != null) event.restrict = update.restrict
   if (update.ephemeralDuration != null) event.ephemeralSeconds = update.ephemeralDuration
   if (update.author != null) event.author = update.author
+  if (update.authorPn != null) event.authorAlt = update.authorPn
   const hasField =
     event.subject !== undefined ||
     event.description !== undefined ||
@@ -467,7 +473,9 @@ export function mapBaileysGroupUpdate(update: BaileysGroupUpdateInput): GroupUpd
 type BaileysJoinRequestInput = {
   id?: string | null
   author?: string | null
+  authorPn?: string | null
   participant?: string | null
+  participantPn?: string | null
   action?: string | null
 }
 
@@ -484,6 +492,8 @@ export function mapBaileysMembershipRequest(
     chat: update.id,
     action: update.action as MembershipRequestAction,
     participant: update.participant,
-    author: update.author ?? undefined
+    participantAlt: update.participantPn ?? undefined,
+    author: update.author ?? undefined,
+    authorAlt: update.authorPn ?? undefined
   }
 }

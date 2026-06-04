@@ -92,6 +92,7 @@ export const callEventSchema = z.object({
   status: callStatusSchema,
   id: z.string().optional(),
   from: z.string(),
+  fromAlt: z.string().optional(),
   isGroup: z.boolean(),
   groupJid: z.string().optional(),
   isVideo: z.boolean().optional(),
@@ -104,6 +105,7 @@ export const groupParticipantsEventSchema = z.object({
   action: participantActionSchema,
   participants: z.array(z.string()),
   author: z.string().optional(),
+  authorAlt: z.string().optional(),
   timestamp: z.number().optional()
 })
 
@@ -116,6 +118,7 @@ export const groupUpdateEventSchema = z.object({
   restrict: z.boolean().optional(),
   ephemeralSeconds: z.number().optional(),
   author: z.string().optional(),
+  authorAlt: z.string().optional(),
   timestamp: z.number().optional()
 })
 
@@ -127,7 +130,9 @@ export const membershipRequestEventSchema = z.object({
   chat: z.string(),
   action: membershipRequestActionSchema,
   participant: z.string(),
+  participantAlt: z.string().optional(),
   author: z.string().optional(),
+  authorAlt: z.string().optional(),
   timestamp: z.number().optional()
 })
 

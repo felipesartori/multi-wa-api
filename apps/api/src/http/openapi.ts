@@ -273,6 +273,7 @@ const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
         status: { type: 'string', enum: ['offer', 'accept', 'reject', 'terminate'] },
         id: { type: 'string' },
         from: { type: 'string' },
+        fromAlt: { type: 'string' },
         isGroup: { type: 'boolean' },
         groupJid: { type: 'string' },
         isVideo: { type: 'boolean' },
@@ -288,6 +289,7 @@ const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
         action: { type: 'string', enum: ['add', 'remove', 'promote', 'demote'] },
         participants: { type: 'array', items: { type: 'string' } },
         author: { type: 'string' },
+        authorAlt: { type: 'string' },
         timestamp: { type: 'number' }
       }
     },
@@ -303,6 +305,7 @@ const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
         restrict: { type: 'boolean' },
         ephemeralSeconds: { type: 'number' },
         author: { type: 'string' },
+        authorAlt: { type: 'string' },
         timestamp: { type: 'number' }
       }
     },
@@ -314,7 +317,9 @@ const WEBHOOK_DELIVERY_SCHEMA: OpenAPIV3.SchemaObject = {
         chat: { type: 'string' },
         action: { type: 'string', enum: ['created', 'revoked', 'rejected'] },
         participant: { type: 'string' },
+        participantAlt: { type: 'string' },
         author: { type: 'string' },
+        authorAlt: { type: 'string' },
         timestamp: { type: 'number' }
       }
     }
@@ -420,6 +425,7 @@ const WEBHOOK_DELIVERY_EXAMPLES: Record<string, OpenAPIV3.ExampleObject> = {
       status: 'offer',
       id: 'CALL-1',
       from: '5511888888888@s.whatsapp.net',
+      fromAlt: '199999999999999@lid',
       isGroup: false,
       isVideo: false,
       timestamp: 1730000000
@@ -468,6 +474,7 @@ const WEBHOOK_DESCRIPTION = [
   '- `group_participants`: members `add`ed, `remove`d, `promote`d or `demote`d. `participants` are the affected jids; `author` is the admin who acted.',
   '- `group_update`: a group metadata change. Each delivery is a partial patch (only the fields that changed): `subject`, `description`, `announce`, `restrict`, `ephemeralSeconds`.',
   '- `membership_request`: a group join request `created`, `revoked` or `rejected` (`rejected` is baileys-only).',
+  '- lid<->pn: `call`, `group_participants`, `group_update` and `membership_request` expose the alternate addressing of their principal jid (`fromAlt` / `authorAlt` / `participantAlt`) when the engine resolves it.',
   '',
   'Payloads are identical across the zapo and baileys engines. See the WebhookDelivery schema for full shapes and examples.'
 ].join('\n')

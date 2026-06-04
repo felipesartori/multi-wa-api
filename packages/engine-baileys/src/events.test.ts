@@ -533,7 +533,8 @@ describe('mapBaileysCall', () => {
   it('maps an offer with timestamp in seconds', () => {
     expect(
       mapBaileysCall({
-        from: 'u@s.whatsapp.net',
+        from: '99@lid',
+        callerPn: '5511888888888@s.whatsapp.net',
         id: 'c1',
         status: 'offer',
         date: new Date(1730000000000),
@@ -543,7 +544,8 @@ describe('mapBaileysCall', () => {
       type: 'call',
       status: 'offer',
       id: 'c1',
-      from: 'u@s.whatsapp.net',
+      from: '99@lid',
+      fromAlt: '5511888888888@s.whatsapp.net',
       isGroup: false,
       groupJid: undefined,
       isVideo: true,
@@ -562,7 +564,8 @@ describe('mapBaileysGroupParticipants', () => {
     expect(
       mapBaileysGroupParticipants({
         id: 'g@g.us',
-        author: 'admin@s.whatsapp.net',
+        author: 'admin@lid',
+        authorPn: '5511999999999@s.whatsapp.net',
         action: 'add',
         participants: [{ id: 'a@s.whatsapp.net' }, { id: 'b@s.whatsapp.net' }]
       })
@@ -571,7 +574,8 @@ describe('mapBaileysGroupParticipants', () => {
       chat: 'g@g.us',
       action: 'add',
       participants: ['a@s.whatsapp.net', 'b@s.whatsapp.net'],
-      author: 'admin@s.whatsapp.net'
+      author: 'admin@lid',
+      authorAlt: '5511999999999@s.whatsapp.net'
     })
     expect(
       mapBaileysGroupParticipants({ id: 'g@g.us', action: 'modify', participants: [{ id: 'a' }] })
@@ -582,11 +586,21 @@ describe('mapBaileysGroupParticipants', () => {
 
 describe('mapBaileysGroupUpdate', () => {
   it('maps only present fields', () => {
-    expect(mapBaileysGroupUpdate({ id: 'g@g.us', subject: 'New', announce: true })).toEqual({
+    expect(
+      mapBaileysGroupUpdate({
+        id: 'g@g.us',
+        subject: 'New',
+        announce: true,
+        author: 'admin@lid',
+        authorPn: '5511999999999@s.whatsapp.net'
+      })
+    ).toEqual({
       type: 'group_update',
       chat: 'g@g.us',
       subject: 'New',
-      announce: true
+      announce: true,
+      author: 'admin@lid',
+      authorAlt: '5511999999999@s.whatsapp.net'
     })
     expect(mapBaileysGroupUpdate({ id: 'g@g.us', desc: 'D', ephemeralDuration: 86400 })).toEqual({
       type: 'group_update',
@@ -607,16 +621,20 @@ describe('mapBaileysMembershipRequest', () => {
     expect(
       mapBaileysMembershipRequest({
         id: 'g@g.us',
-        author: 'admin@s.whatsapp.net',
-        participant: 'a@s.whatsapp.net',
+        author: 'admin@lid',
+        authorPn: '5511999999999@s.whatsapp.net',
+        participant: 'a@lid',
+        participantPn: '5511888888888@s.whatsapp.net',
         action: 'created'
       })
     ).toEqual({
       type: 'membership_request',
       chat: 'g@g.us',
       action: 'created',
-      participant: 'a@s.whatsapp.net',
-      author: 'admin@s.whatsapp.net'
+      participant: 'a@lid',
+      participantAlt: '5511888888888@s.whatsapp.net',
+      author: 'admin@lid',
+      authorAlt: '5511999999999@s.whatsapp.net'
     })
     expect(
       mapBaileysMembershipRequest({ id: 'g@g.us', participant: 'a', action: 'rejected' })

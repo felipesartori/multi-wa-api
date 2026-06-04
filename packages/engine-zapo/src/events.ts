@@ -337,6 +337,7 @@ type ZapoCallInput = {
   callId?: string | null
   callerPnJid?: string | null
   callCreatorJid?: string | null
+  senderLidJid?: string | null
   groupJid?: string | null
   isVideo?: boolean | null
   timestampSeconds?: number | null
@@ -353,6 +354,7 @@ export function mapZapoCall(event: ZapoCallInput): CallEvent | null {
     status: event.type as CallStatus,
     id: event.callId ?? undefined,
     from,
+    fromAlt: event.callerPnJid ? (event.senderLidJid ?? event.callCreatorJid ?? undefined) : undefined,
     isGroup: Boolean(event.groupJid),
     groupJid: event.groupJid ?? undefined,
     isVideo: event.isVideo ?? undefined,
@@ -430,14 +432,21 @@ export function mapZapoGroup(event: ZapoGroupInput): EngineEvent[] {
   ) {
     const action: MembershipRequestAction =
       event.action === 'created_membership_requests' ? 'created' : 'revoked'
-    return jidsOf(event.membershipRequests).map((participant) => ({
-      type: 'membership_request',
-      chat,
-      action,
-      participant,
-      author,
-      timestamp
-    }))
+    const requests: EngineEvent[] = []
+    for (const member of event.membershipRequests ?? []) {
+      const participant = member?.jid ?? member?.phoneJid
+      if (!participant) continue
+      requests.push({
+        type: 'membership_request',
+        chat,
+        action,
+        participant,
+        participantAlt: member?.jid ? (member?.phoneJid ?? undefined) : undefined,
+        author,
+        timestamp
+      })
+    }
+    return requests
   }
 
   return []
