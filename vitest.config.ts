@@ -1,8 +1,10 @@
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 const pkg = (name: string): string =>
   fileURLToPath(new URL(`./packages/${name}/src/index.ts`, import.meta.url))
+
+const referenceRepos = ['zapo', 'evolution-api', 'waha', 'wa-store-migrate', 'gomib']
 
 export default defineConfig({
   resolve: {
@@ -17,17 +19,17 @@ export default defineConfig({
     }
   },
   test: {
-    include: ['packages/*/src/**/*.test.ts', 'apps/*/src/**/*.test.ts'],
+    exclude: [...configDefaults.exclude, ...referenceRepos.map((dir) => `${dir}/**`)],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts'],
       exclude: ['**/*.test.ts', '**/index.ts', '**/dist/**', 'packages/db/src/migrations/**'],
       thresholds: {
-        lines: 20,
-        functions: 20,
-        statements: 20,
-        branches: 40
+        lines: 50,
+        functions: 50,
+        statements: 50,
+        branches: 70
       }
     }
   }
