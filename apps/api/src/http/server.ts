@@ -20,8 +20,10 @@ import { decorateOpenApi } from './openapi'
 import { authRoutes } from './routes/auth'
 import { groupRoutes } from './routes/groups'
 import { healthRoutes } from './routes/health'
+import { mediaRoutes } from './routes/media'
 import { messageRoutes } from './routes/messages'
 import { sessionRoutes } from './routes/sessions'
+import { tenantRoutes } from './routes/tenant'
 import { webhookRoutes } from './routes/webhooks'
 import type { AppInstance } from './types'
 
@@ -89,6 +91,7 @@ export async function buildApp(container: Container): Promise<FastifyInstance> {
       sessionRoutes(scoped, container)
       messageRoutes(scoped, container)
       groupRoutes(scoped, container)
+      mediaRoutes(scoped, container)
     },
     { prefix: '/sessions' }
   )
@@ -100,6 +103,15 @@ export async function buildApp(container: Container): Promise<FastifyInstance> {
       webhookRoutes(scoped, container)
     },
     { prefix: '/webhooks' }
+  )
+
+  await app.register(
+    async (instance) => {
+      const scoped: AppInstance = instance.withTypeProvider<ZodTypeProvider>()
+      scoped.addHook('preHandler', scoped.authenticate)
+      tenantRoutes(scoped, container)
+    },
+    { prefix: '/tenant' }
   )
 
   return app

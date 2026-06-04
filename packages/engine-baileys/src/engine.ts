@@ -1,6 +1,12 @@
+import type { Readable } from 'node:stream'
 import { errors, type EngineOptions, type WaEngine } from '@multi-wa/core'
-import type { EngineEvent, MessageContent, SendMessageResult } from '@multi-wa/types'
-import makeWASocket, { DisconnectReason, jidNormalizedUser, type WASocket } from 'baileys'
+import type { EngineEvent, MediaRef, MessageContent, SendMessageResult } from '@multi-wa/types'
+import makeWASocket, {
+  DisconnectReason,
+  downloadContentFromMessage,
+  jidNormalizedUser,
+  type WASocket
+} from 'baileys'
 import { clearBaileys, usePostgresAuthState } from './auth-state'
 import {
   mapBaileysAck,
@@ -157,6 +163,17 @@ export class BaileysEngine implements WaEngine {
   async send(to: string, content: MessageContent): Promise<SendMessageResult> {
     const result = await this.requireSocket().sendMessage(to, toBaileysContent(content))
     return { id: result?.key.id ?? undefined }
+  }
+
+  async downloadMedia(ref: MediaRef): Promise<Readable> {
+    const { mediaKey, directPath, url } = ref.media
+    if (!mediaKey || !directPath) {
+      throw errors.badRequest('media reference is missing mediaKey or directPath')
+    }
+    return downloadContentFromMessage(
+      { mediaKey: Buffer.from(mediaKey, 'base64'), directPath, url: url ?? undefined },
+      ref.type
+    )
   }
 }
 

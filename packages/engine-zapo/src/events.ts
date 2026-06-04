@@ -37,6 +37,16 @@ interface MediaLike {
   width?: number | null
   height?: number | null
   seconds?: number | null
+  directPath?: string | null
+  url?: string | null
+  mediaKey?: Uint8Array | null
+  fileEncSha256?: Uint8Array | null
+  fileSha256?: Uint8Array | null
+}
+
+function toBase64(value: Uint8Array | null | undefined): string | undefined {
+  if (!value) return undefined
+  return Buffer.from(value).toString('base64')
 }
 
 function mapMedia(media: MediaLike | null | undefined): InboundMedia {
@@ -45,7 +55,12 @@ function mapMedia(media: MediaLike | null | undefined): InboundMedia {
     size: toNumber(media?.fileLength),
     width: media?.width ?? undefined,
     height: media?.height ?? undefined,
-    seconds: media?.seconds ?? undefined
+    seconds: media?.seconds ?? undefined,
+    directPath: media?.directPath ?? undefined,
+    url: media?.url ?? undefined,
+    mediaKey: toBase64(media?.mediaKey),
+    fileEncSha256: toBase64(media?.fileEncSha256),
+    fileSha256: toBase64(media?.fileSha256)
   }
 }
 

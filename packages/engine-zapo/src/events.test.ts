@@ -161,6 +161,26 @@ describe('mapZapoContent', () => {
     expect(mapZapoContent(null)).toEqual({ type: 'unknown' })
     expect(mapZapoContent(undefined)).toEqual({ type: 'unknown' })
   })
+
+  it('includes base64 download pointers in media', () => {
+    const out = mapZapoContent({
+      documentMessage: {
+        mediaKey: new Uint8Array([9, 8]),
+        directPath: '/v/d',
+        url: 'https://cdn/d',
+        fileEncSha256: new Uint8Array([7])
+      }
+    })
+    expect(out).toMatchObject({
+      type: 'document',
+      media: {
+        directPath: '/v/d',
+        url: 'https://cdn/d',
+        mediaKey: Buffer.from([9, 8]).toString('base64'),
+        fileEncSha256: Buffer.from([7]).toString('base64')
+      }
+    })
+  })
 })
 
 describe('mapZapoMessageEvent', () => {
