@@ -1,12 +1,14 @@
-import type { WAMessageKey } from 'baileys'
+import { proto, type WAMessageKey } from 'baileys'
 import { describe, expect, it } from 'vitest'
 import {
+  isBaileysEditUpsert,
   isBaileysReactionUpsert,
   mapBaileysAck,
   mapBaileysAckStatus,
   mapBaileysCall,
   mapBaileysContent,
   mapBaileysContext,
+  mapBaileysEdit,
   mapBaileysGroupParticipants,
   mapBaileysGroupUpdate,
   mapBaileysMembershipRequest,
@@ -661,5 +663,71 @@ describe('mapBaileysMembershipRequest', () => {
     expect(
       mapBaileysMembershipRequest({ id: 'g@g.us', participant: 'a', action: 'unknown' })
     ).toBeNull()
+  })
+})
+
+describe('isBaileysEditUpsert / mapBaileysEdit', () => {
+  const editUpsert = {
+    key: {
+      remoteJid: '123@g.us',
+      id: 'EDIT_STANZA',
+      fromMe: false,
+      participant: '55@lid',
+      participantAlt: '55@s.whatsapp.net'
+    },
+    messageTimestamp: 1730000000,
+    message: {
+      protocolMessage: {
+        type: proto.Message.ProtocolMessage.Type.MESSAGE_EDIT,
+        key: { id: 'ORIG1' },
+        editedMessage: { conversation: 'edited text' },
+        timestampMs: 1730000500000
+      }
+    }
+  }
+
+  it('detects an edit upsert and ignores plain messages', () => {
+    expect(isBaileysEditUpsert(editUpsert as never)).toBe(true)
+    expect(isBaileysEditUpsert({ key: {}, message: { conversation: 'oi' } } as never)).toBe(false)
+    expect(isBaileysEditUpsert({ key: {} } as never)).toBe(false)
+  })
+
+  it('maps a group edit using the original id and new content', () => {
+    expect(mapBaileysEdit(editUpsert as never)).toEqual({
+      type: 'message_edit',
+      id: 'ORIG1',
+      chat: '123@g.us',
+      from: '55@lid',
+      fromMe: false,
+      isGroup: true,
+      participant: '55@lid',
+      fromAlt: '55@s.whatsapp.net',
+      timestamp: 1730000500,
+      content: { type: 'text', text: 'edited text' }
+    })
+  })
+
+  it('maps a self edit in a direct chat (fromMe true)', () => {
+    const event = mapBaileysEdit({
+      key: { remoteJid: 'c@s.whatsapp.net', id: 'STANZA2', fromMe: true },
+      messageTimestamp: 1730000900,
+      message: {
+        protocolMessage: {
+          type: proto.Message.ProtocolMessage.Type.MESSAGE_EDIT,
+          key: { id: 'ORIG2' },
+          editedMessage: { extendedTextMessage: { text: 'fixed typo' } }
+        }
+      }
+    } as never)
+    expect(event).toMatchObject({
+      type: 'message_edit',
+      id: 'ORIG2',
+      chat: 'c@s.whatsapp.net',
+      from: 'c@s.whatsapp.net',
+      fromMe: true,
+      isGroup: false,
+      timestamp: 1730000900,
+      content: { type: 'text', text: 'fixed typo' }
+    })
   })
 })
