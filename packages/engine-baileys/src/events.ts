@@ -9,13 +9,20 @@ import type {
   MembershipRequestAction,
   MembershipRequestEvent,
   MessageAckStatus,
+  MessageEditEvent,
   MessageEvent,
   ParticipantAction,
   PresenceEvent,
   PresenceStatus,
   QuotedMessage
 } from '@multi-wa/types'
-import { getContentType, type WAMessage, type WAMessageKey, type proto } from 'baileys'
+import {
+  getContentType,
+  normalizeMessageContent,
+  proto,
+  type WAMessage,
+  type WAMessageKey
+} from 'baileys'
 
 function toNumber(value: unknown): number | undefined {
   if (value === null || value === undefined) return undefined
@@ -234,6 +241,39 @@ export function mapBaileysMessageEvent(message: WAMessage): MessageEvent {
     timestamp: toNumber(message.messageTimestamp),
     content: mapBaileysContent(message.message),
     ...mapBaileysContext(message.message)
+  }
+}
+
+export function isBaileysEditUpsert(message: WAMessage): boolean {
+  const protocolMessage = normalizeMessageContent(message.message)?.protocolMessage
+  return (
+    protocolMessage?.type === proto.Message.ProtocolMessage.Type.MESSAGE_EDIT &&
+    protocolMessage.editedMessage != null
+  )
+}
+
+export function isBaileysProtocolMessage(message: WAMessage): boolean {
+  return normalizeMessageContent(message.message)?.protocolMessage != null
+}
+
+export function mapBaileysEdit(message: WAMessage): MessageEditEvent {
+  const protocolMessage = normalizeMessageContent(message.message)?.protocolMessage
+  const edited = protocolMessage?.editedMessage ?? undefined
+  const chat = message.key.remoteJid ?? ''
+  const editedMs = toNumber(protocolMessage?.timestampMs)
+  return {
+    type: 'message_edit',
+    id: protocolMessage?.key?.id ?? message.key.id ?? '',
+    chat,
+    from: message.key.participant ?? chat,
+    fromMe: Boolean(message.key.fromMe),
+    isGroup: isGroupJid(chat),
+    participant: message.key.participant ?? undefined,
+    fromAlt: message.key.participantAlt ?? message.key.remoteJidAlt ?? undefined,
+    timestamp:
+      editedMs !== undefined ? Math.floor(editedMs / 1000) : toNumber(message.messageTimestamp),
+    content: mapBaileysContent(edited),
+    ...mapBaileysContext(edited)
   }
 }
 
