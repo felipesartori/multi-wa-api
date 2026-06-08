@@ -1,19 +1,20 @@
-import pg from 'pg'
+import type { Pool } from 'pg'
 import { runMigrations } from '../../db/src/migrate'
+import { createTestPool } from '../../db/src/testing/pool'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ApiKeyRepository, RefreshTokenRepository, UserRepository } from './auth/repository'
 import { AuthService } from './auth/service'
 import { SessionRepository } from './sessions/repository'
 import { WebhookRepository } from './webhooks/repository'
 
-const url = process.env.TEST_DATABASE_URL
-const suite = url ? describe : describe.skip
+// Default to PGlite (in-memory); set TEST_DATABASE_URL to a real Postgres to use it.
+const url = process.env.TEST_DATABASE_URL || 'pglite'
 
-suite('database integration', () => {
-  let pool: pg.Pool
+describe('database integration', () => {
+  let pool: Pool
 
   beforeAll(async () => {
-    pool = new pg.Pool({ connectionString: url })
+    pool = await createTestPool(url)
     await runMigrations(pool)
   })
 
