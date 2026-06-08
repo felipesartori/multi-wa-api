@@ -1,14 +1,11 @@
 /**
- * Dev-only launcher: runs an embedded Postgres (PGlite, WASM) exposed over a
- * Postgres-wire TCP socket, then starts the API pointed at it. Nothing here is
- * part of the app build — the API keeps using `pg` against a normal
- * `DATABASE_URL`, it just happens to point at PGlite.
+ * Dev launcher: runs an embedded Postgres (PGlite/WASM) over a Postgres-wire
+ * TCP socket and starts the API pointed at it. Dev only; the app build never
+ * references PGlite.
  *
- * Usage: `pnpm dev:pglite`
- * Env:
- *   PGLITE_PORT     tcp port for the socket server (default 5433)
- *   PGLITE_DATA_DIR data dir; `memory` for ephemeral (default `.pglite`)
- *   PGLITE_FRESH=1  wipe the data dir before starting (persistent mode only)
+ * Usage: pnpm dev:pglite
+ * Env: PGLITE_PORT (5433), PGLITE_DATA_DIR (`memory` = ephemeral, default
+ *      `.pglite`), PGLITE_FRESH=1 (wipe the data dir first)
  */
 import { spawn } from 'node:child_process'
 import { rmSync } from 'node:fs'
@@ -34,10 +31,9 @@ async function main(): Promise<void> {
   }
 
   log(`starting embedded postgres (${ephemeral ? 'in-memory' : `dataDir: ${dataDir}`})`)
-  // pgcrypto is required by the migrations (CREATE EXTENSION pgcrypto) and isn't
-  // bundled into PGlite by default, so load it explicitly.
+  // pgcrypto: required by the migrations, not bundled in PGlite by default.
   const db = new PGlite({ dataDir, extensions: { pgcrypto } })
-  await db.query('select 1') // ensure the WASM engine is fully initialized
+  await db.query('select 1') // warm up the WASM engine
 
   const server = new PGLiteSocketServer({ db, host: HOST, port: PORT })
   await server.start()
@@ -46,9 +42,8 @@ async function main(): Promise<void> {
   log(`postgres-wire server ready on ${HOST}:${PORT}`)
   log(`starting API with DATABASE_URL=${databaseUrl} (PG_POOL_MAX=1)`)
 
-  // PG_POOL_MAX=1: PGlite is a single instance with global transaction state,
-  // so a single pooled connection keeps transactions serialized and safe.
-  // Injected env wins over the app's .env (dotenv does not override existing).
+  // PG_POOL_MAX=1: PGlite is a single instance, so one connection keeps
+  // transactions serialized. Injected env wins over the app's .env.
   const child = spawn('pnpm', ['--filter', '@multi-wa/api', 'dev'], {
     stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: databaseUrl, PG_POOL_MAX: '1' }
@@ -64,6 +59,10 @@ async function main(): Promise<void> {
   }
 
   child.on('exit', (code) => void shutdown(code ?? 0))
+  child.on('error', (error) => {
+    process.stderr.write(`[pglite] failed to spawn API: ${String(error)}\n`)
+    void shutdown(1)
+  })
   process.on('SIGINT', () => child.kill('SIGINT'))
   process.on('SIGTERM', () => child.kill('SIGTERM'))
 }
