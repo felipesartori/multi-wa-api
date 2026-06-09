@@ -23,7 +23,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts'],
-      exclude: ['**/*.test.ts', '**/index.ts', '**/dist/**', 'packages/db/src/migrations/**'],
+      exclude: [
+        '**/*.test.ts',
+        '**/index.ts',
+        '**/dist/**',
+        'packages/db/src/migrations/**',
+        'packages/db/src/testing/**'
+      ],
       thresholds: {
         lines: 50,
         functions: 50,

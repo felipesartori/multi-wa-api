@@ -80,6 +80,20 @@ pnpm db:migrate               # cria as tabelas
 pnpm dev                      # sobe apps/api em http://localhost:3000
 ```
 
+### Sem Postgres (dev)
+
+Para subir tudo isolado, sem um Postgres rodando, use o launcher de dev que embute
+um Postgres em WASM ([PGlite](https://github.com/electric-sql/pglite)) e aponta a API
+para ele — nada disso entra no build de produção (é só dev):
+
+```bash
+pnpm dev:pglite               # sobe um Postgres embutido + a API, sem Docker/Postgres
+```
+
+Persiste em `.pglite/` por padrão (mantém o pareamento entre reinícios). Variáveis:
+`PGLITE_DATA_DIR=memory` (efêmero), `PGLITE_PORT` (porta, padrão 5433),
+`PGLITE_FRESH=1` (zera o dado antes de subir).
+
 Fluxo mínimo com `curl`:
 
 ```bash
@@ -332,12 +346,12 @@ dispatcher de webhooks (HMAC, servidor HTTP real), `AuthService`, o SDK (servido
 real + parsing de SSE), as rotas da API (`fastify.inject`) e um round-trip real de
 migração `baileys ↔ zapo` via `wa-store-migrate`.
 
-Testes de integração com Postgres (repositórios + auth contra um banco real) rodam
-apenas quando `TEST_DATABASE_URL` está definido — caso contrário são pulados:
+Os testes de integração (repositórios + auth contra um banco real) rodam por padrão
+contra um Postgres embutido em memória ([PGlite](https://github.com/electric-sql/pglite)),
+sem setup. Para rodar contra um Postgres de verdade, defina `TEST_DATABASE_URL`:
 
 ```bash
-TEST_DATABASE_URL=postgres://user:pass@localhost:5432/multi_wa_test \
-  pnpm --filter @multi-wa/core test
+TEST_DATABASE_URL=postgres://user:pass@localhost:5432/multi_wa_test pnpm test:all
 ```
 
 O schema é migrado automaticamente no banco de teste.
